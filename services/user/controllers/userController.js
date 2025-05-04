@@ -1,5 +1,31 @@
 const { validationResult } = require('express-validator');
-const { getUserById, getAllUsers, updateUser, deleteUser, setRole } = require('../models/userModel');
+const { getUserById, getAllUsers, updateUser, deleteUser, setRole, createUser } = require('../models/userModel');
+
+// Create new user
+const createUserController = async (req, res) => {
+  const { name, email, password, role } = req.body;
+
+  // Validate input
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Check if user already exists
+    const existingUser = await getUserById(email);
+    if (existingUser) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    // Create new user
+    const newUser = await createUser({ name, email, password, role });
+    res.status(201).json({ message: 'User created successfully', user: newUser });
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // Get all users (Admin only)
 const getAllUsersController = async (req, res) => {
@@ -96,6 +122,7 @@ const setUserRole = async (req, res) => {
 };
 
 module.exports = {
+  createUserController,
   getAllUsersController,
   getUser,
   updateUserInfo,

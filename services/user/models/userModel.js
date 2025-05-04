@@ -10,6 +10,19 @@ if (!firebaseAdmin.apps.length) {
 const db = firebaseAdmin.firestore();
 const usersRef = db.collection('users');
 
+// Create user
+const createUser = async (userData) => {
+  try {
+    const userRef = usersRef.doc(); // Create a new document reference
+    await userRef.set(userData);  // Set user data to Firestore
+
+    const userDoc = await userRef.get();  // Get the newly created user document
+    return { id: userDoc.id, ...userDoc.data() };  // Return the created user with ID
+  } catch (error) {
+    throw new Error('Error creating user: ' + error.message);
+  }
+};
+
 // Get all users
 const getAllUsers = async () => {
   try {
@@ -75,6 +88,7 @@ const setRole = async (id, role) => {
 };
 
 module.exports = {
+  createUser,
   getAllUsers, 
   getUserById, 
   updateUser, 

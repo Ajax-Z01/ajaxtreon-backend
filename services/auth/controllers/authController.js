@@ -2,9 +2,9 @@ const admin = require('firebase-admin');
 
 // Register a new user
 const registerUser = async (req, res) => {
-  const { email, password, displayName, role } = req.body;
+  const { email, password, name, role } = req.body;
 
-  if (!email || !password || !displayName || !role) {
+  if (!email || !password || !name || !role) {
     return res.status(400).json({ message: 'All fields are required' });
   }
 
@@ -12,7 +12,7 @@ const registerUser = async (req, res) => {
     const userRecord = await admin.auth().createUser({
       email,
       password,
-      displayName,
+      name,
     });
 
     // Set custom claims (role)
@@ -21,7 +21,7 @@ const registerUser = async (req, res) => {
     // Optionally store user in Firestore
     await admin.firestore().collection('users').doc(userRecord.uid).set({
       email,
-      displayName,
+      name,
       role,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });

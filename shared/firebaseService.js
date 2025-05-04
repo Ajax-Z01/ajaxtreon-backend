@@ -1,4 +1,4 @@
-const admin = require('firebase-admin');
+const admin = require('./firebaseAdmin');
 
 // Function to verify Firebase ID token
 const verifyIdToken = async (token) => {

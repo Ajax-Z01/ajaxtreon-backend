@@ -8,6 +8,6 @@ module.exports = (app) => {
     if (!file.endsWith('Routes.js')) return;
     const route = require(path.join(routesPath, file));
     const routeName = file.replace('Routes.js', '').toLowerCase();
-    app.use(`/api/${routeName}`, route);
+    app.use(`/${routeName}`, route);
   });
 };

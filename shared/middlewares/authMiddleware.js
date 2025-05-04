@@ -11,8 +11,15 @@ const authenticateUser = async (req, res, next) => {
 
     const token = authHeader.split(' ')[1];
     const decodedToken = await admin.auth().verifyIdToken(token);
+    
+    console.log('Decoded token:', decodedToken);
 
-    req.user = decodedToken;
+    req.user = {
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+      role: decodedToken.role || 'user',
+    };
+
     next();
   } catch (error) {
     res.status(401).json({ message: 'Unauthorized', error: error.message });
@@ -23,7 +30,7 @@ const authenticateUser = async (req, res, next) => {
 const authorizeRoles = (...roles) => (req, res, next) => {
   const userRole = req.user?.role;
 
-  if (!roles.includes(userRole)) {
+  if (!userRole || !roles.includes(userRole)) {
     return res.status(403).json({ message: 'Forbidden: Insufficient role' });
   }
 

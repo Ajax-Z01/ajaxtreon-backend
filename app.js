@@ -10,7 +10,7 @@ const inventoryService = require('./services/inventory');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: 'http://localhost:3000' }));
 app.use(express.json());
 app.use(morgan('dev'));
 
@@ -19,7 +19,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/auth', authService);
-app.use('/users', userService);
+app.use('/user', userService);
 app.use('/inventory', inventoryService);
 
 // Error handler
