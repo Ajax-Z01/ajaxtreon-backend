@@ -1,4 +1,4 @@
-const firebaseAdmin = require('firebase-admin');
+const firebaseAdmin = require('@shared/firebaseAdmin'); // Import Firebase Admin SDK
 
 // Initialize Firebase Admin SDK (ensure this is done once)
 if (!firebaseAdmin.apps.length) {
@@ -9,19 +9,6 @@ if (!firebaseAdmin.apps.length) {
 
 const db = firebaseAdmin.firestore();
 const usersRef = db.collection('users');
-
-// Create user
-const createUser = async (userData) => {
-  try {
-    const userRef = usersRef.doc(); // Create a new document reference
-    await userRef.set(userData);  // Set user data to Firestore
-
-    const userDoc = await userRef.get();  // Get the newly created user document
-    return { id: userDoc.id, ...userDoc.data() };  // Return the created user with ID
-  } catch (error) {
-    throw new Error('Error creating user: ' + error.message);
-  }
-};
 
 // Get all users
 const getAllUsers = async () => {
@@ -69,29 +56,9 @@ const deleteUser = async (id) => {
   }
 };
 
-// Set user role
-const setRole = async (id, role) => {
-  try {
-    const userDoc = await usersRef.doc(id).get();
-    if (!userDoc.exists) {
-      throw new Error('User not found');
-    }
-    
-    // Update the role in Firestore
-    await usersRef.doc(id).update({ role: role });
-
-    const updatedUserDoc = await usersRef.doc(id).get();
-    return { id: updatedUserDoc.id, ...updatedUserDoc.data() };
-  } catch (error) {
-    throw new Error('Error setting role: ' + error.message);
-  }
-};
-
 module.exports = {
-  createUser,
   getAllUsers, 
   getUserById, 
   updateUser, 
   deleteUser,
-  setRole,
 };

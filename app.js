@@ -7,6 +7,7 @@ require('module-alias/register');
 const authService = require('./services/auth');
 const userService = require('./services/user');
 const inventoryService = require('./services/inventory');
+const paymentService = require('./services/payment');
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.get('/', (req, res) => {
 app.use('/auth', authService);
 app.use('/user', userService);
 app.use('/inventory', inventoryService);
+app.use('/payment', paymentService);
 
 // Error handler
 app.use((err, req, res, next) => {

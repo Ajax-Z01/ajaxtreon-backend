@@ -1,4 +1,4 @@
-const admin = require('firebase-admin');
+const admin = require('@shared/firebaseAdmin');
 
 // Register a new user
 const registerUser = async (req, res) => {
@@ -12,7 +12,7 @@ const registerUser = async (req, res) => {
     const userRecord = await admin.auth().createUser({
       email,
       password,
-      name,
+      displayName: name,
     });
 
     // Set custom claims (role)
@@ -32,23 +32,6 @@ const registerUser = async (req, res) => {
   }
 };
 
-// Middleware to verify Firebase ID token
-const authenticateUser = async (req, res, next) => {
-  const idToken = req.headers.authorization && req.headers.authorization.split('Bearer ')[1];
-  
-  if (!idToken) {
-    return res.status(403).json({ message: 'No token provided' });
-  }
-
-  try {
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-    req.user = decodedToken;  // Attach user data to request
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: 'Unauthorized' });
-  }
-};
-
 // Get user profile with role from custom claims
 const getUserProfile = async (req, res) => {
   try {
@@ -58,7 +41,7 @@ const getUserProfile = async (req, res) => {
     res.json({
       uid: userRecord.uid,
       email: userRecord.email,
-      displayName: userRecord.displayName || '',
+      name: userRecord.name || '',
       role: decoded.role || '',
     });
   } catch (error) {
@@ -68,6 +51,5 @@ const getUserProfile = async (req, res) => {
 
 module.exports = {
   registerUser,
-  authenticateUser,
   getUserProfile,
 };
