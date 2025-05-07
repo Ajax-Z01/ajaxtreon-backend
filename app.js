@@ -4,10 +4,11 @@ const morgan = require('morgan');
 require('dotenv').config();
 require('module-alias/register');
 
-const authService = require('./services/auth');
-const userService = require('./services/user');
-const inventoryService = require('./services/inventory');
-const paymentService = require('./services/payment');
+const authService = require('./services/auth-service');
+const userService = require('./services/user-service');
+const inventoryService = require('./services/inventory-service');
+const paymentService = require('./services/payment-service');
+const purchaseService = require('./services/purchase-service');
 
 const app = express();
 
@@ -23,6 +24,7 @@ app.use('/auth', authService);
 app.use('/user', userService);
 app.use('/inventory', inventoryService);
 app.use('/payment', paymentService);
+app.use('/purchase', purchaseService);
 
 // Error handler
 app.use((err, req, res, next) => {
