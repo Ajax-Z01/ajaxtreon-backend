@@ -18,16 +18,17 @@ const addOrder = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  try {
-    const newOrder = req.body;
-    if (!OrderDTO.validate(newOrder)) {
-      return res.status(400).json({ message: 'Invalid order data' });
-    }
+  const orderData = req.body;
 
-    const orderId = await orderModel.addOrder(newOrder);
+  if (!OrderDTO.validate(orderData)) {
+    return res.status(400).json({ message: 'Invalid order data' });
+  }
+
+  try {
+    const orderId = await orderModel.addOrderWithTransaction(orderData);
     res.status(201).json({ id: orderId });
   } catch (error) {
-    console.error('Error creating order:', error);
+    console.error('Transaction failed:', error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -38,31 +39,35 @@ const updateOrder = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
+  const { id } = req.params;
+  const { status } = req.body;
+
+  const validStatuses = ['pending', 'completed', 'cancelled'];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ message: 'Invalid status value' });
+  }
+
   try {
-    const { id } = req.params;
-    const updatedOrder = req.body;
-
-    if (!OrderDTO.validate(updatedOrder)) {
-      return res.status(400).json({ message: 'Invalid order data' });
-    }
-
-    await orderModel.updateOrder(id, updatedOrder);
-    res.json({ message: 'Order updated' });
+    await orderModel.updateOrder(id, status);
+    res.json({ message: 'Order status updated' });
   } catch (error) {
     console.error('Error updating order:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
-const deleteOrder = async (req, res) => {
-  try {
-    const { id } = req.params;
-    await orderModel.deleteOrder(id);
-    res.json({ message: 'Order deleted' });
-  } catch (error) {
-    console.error('Error deleting order:', error);
-    res.status(500).json({ message: error.message });
+const deleteOrder = async (id) => {
+  const orderRef = db.collection('orders').doc(id);
+  const orderDoc = await orderRef.get();
+
+  if (!orderDoc.exists) {
+    throw new Error('Order not found');
   }
+
+  await orderRef.update({
+    isDeleted: true,
+    deletedAt: new Date(),
+  });
 };
 
 module.exports = {

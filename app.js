@@ -9,6 +9,7 @@ const userService = require('./services/user-service');
 const inventoryService = require('./services/inventory-service');
 const paymentService = require('./services/payment-service');
 const purchaseService = require('./services/purchase-service');
+const orderService = require('./services/order-service');
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use('/user', userService);
 app.use('/inventory', inventoryService);
 app.use('/payment', paymentService);
 app.use('/purchase', purchaseService);
+app.use('/order', orderService);
 
 // Error handler
 app.use((err, req, res, next) => {
