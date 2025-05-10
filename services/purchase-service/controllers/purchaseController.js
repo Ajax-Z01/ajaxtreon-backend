@@ -31,14 +31,7 @@ const getPurchaseById = async (req, res) => {
 // Add a new purchase
 const addPurchase = async (req, res) => {
   try {
-    const purchaseData = req.body;
-
-    // Validate input fields
-    if (!purchaseData.items || purchaseData.items.length === 0) {
-      return res.status(400).json({ message: 'Purchase must have at least one item' });
-    }
-
-    const purchaseId = await purchaseModel.create(purchaseData);
+    const purchaseId = await purchaseModel.addPurchaseWithTransaction(req.body);
     res.status(201).json({ message: 'Purchase created successfully', purchaseId });
   } catch (error) {
     console.error('Error creating purchase:', error);
@@ -46,19 +39,14 @@ const addPurchase = async (req, res) => {
   }
 };
 
-// Update purchase status (e.g. from 'pending' to 'received')
+// Update purchase status only
 const updatePurchaseStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    // Validate status
-    if (!status) {
-      return res.status(400).json({ message: 'Status is required' });
-    }
-
     const purchase = await purchaseModel.getById(id);
-    if (!purchase) {
+    if (!purchase || purchase.isDeleted) {
       return res.status(404).json({ message: 'Purchase not found' });
     }
 
@@ -70,13 +58,13 @@ const updatePurchaseStatus = async (req, res) => {
   }
 };
 
-// Delete a purchase
+// Soft delete a purchase
 const deletePurchase = async (req, res) => {
   try {
     const { id } = req.params;
 
     const purchase = await purchaseModel.getById(id);
-    if (!purchase) {
+    if (!purchase || purchase.isDeleted) {
       return res.status(404).json({ message: 'Purchase not found' });
     }
 

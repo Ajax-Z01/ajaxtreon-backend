@@ -1,6 +1,5 @@
 const { validationResult } = require('express-validator');
 const orderModel = require('../models/orderModel');
-const OrderDTO = require('../dtos/orderDTO');
 
 const getOrders = async (req, res) => {
   try {
@@ -13,19 +12,8 @@ const getOrders = async (req, res) => {
 };
 
 const addOrder = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const orderData = req.body;
-
-  if (!OrderDTO.validate(orderData)) {
-    return res.status(400).json({ message: 'Invalid order data' });
-  }
-
   try {
-    const orderId = await orderModel.addOrderWithTransaction(orderData);
+    const orderId = await orderModel.addOrderWithTransaction(req.body);
     res.status(201).json({ id: orderId });
   } catch (error) {
     console.error('Transaction failed:', error);

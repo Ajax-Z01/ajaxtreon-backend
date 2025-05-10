@@ -1,44 +1,98 @@
-const { db } = require('firebase-admin').firestore();
+const admin = require('firebase-admin');
+const db = admin.firestore();
+const PurchaseDTO = require('../dtos/purchaseDTO')
 
-const COLLECTION_NAME = 'purchases'
+// CREATE
+const addPurchaseWithTransaction = async (rawData) => {
+  const dto = new PurchaseDTO(
+    rawData.supplierId,
+    rawData.productId,
+    rawData.quantity,
+    rawData.status || 'pending'
+  );
 
-const create = async (purchaseData) => {
-    const now = new Date()
-  
-    const newPurchase = {
-      ...purchaseData,
-      status: 'pending',
-      createdAt: now,
-      updatedAt: now
+  if (!PurchaseDTO.validate(dto)) {
+    throw new Error('Invalid purchase data');
+  }
+
+  const purchaseData = PurchaseDTO.transformToFirestore(dto);
+
+  const purchaseRef = db.collection('purchases').doc();
+  const productRef = db.collection('products').doc(dto.productId);
+  const stockLogRef = db.collection('stock_changes').doc();
+
+  await db.runTransaction(async (t) => {
+    const productDoc = await t.get(productRef);
+    if (!productDoc.exists) {
+      throw new Error('Product not found');
     }
-  
-    const docRef = await db.collection(COLLECTION_NAME).add(newPurchase)
-    await docRef.update({ id: docRef.id })
-    return docRef.id
-}
+
+    const productData = productDoc.data();
+    const newStock = productData.stock + dto.quantity;
+    t.update(productRef, { stock: newStock });
+
+    t.set(purchaseRef, {
+      ...purchaseData,
+      isDeleted: false,
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt
+    });
+
+    t.set(stockLogRef, {
+      product_id: dto.productId,
+      change_type: 'add',
+      quantity: dto.quantity,
+      timestamp: dto.createdAt,
+      note: 'Stock added via purchase transaction'
+    });
+  });
+
+  return purchaseRef.id;
+};
 
 const getAll = async () => {
-  const snapshot = await db.collection(COLLECTION_NAME).get()
-  return snapshot.docs.map(doc => doc.data())
-}
+  const snapshot = await db.collection('purchases').where('isDeleted', '!=', true).get();
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    return { ...data, id: doc.id };
+  });
+};
 
 const getById = async (id) => {
-  const doc = await db.collection(COLLECTION_NAME).doc(id).get()
-  if (!doc.exists) return null
-  return doc.data()
-}
+  const doc = await db.collection('purchases').doc(id).get();
+  if (!doc.exists || doc.data().isDeleted) return null;
+  const data = doc.data();
+  return { ...data, id };
+};
 
+// UPDATE
 const update = async (id, updateData) => {
-  updateData.updatedAt = new Date()
-  await db.collection(COLLECTION_NAME).doc(id).update(updateData)
-}
+  const allowedStatuses = ['pending', 'completed', 'cancelled'];
 
+  if (
+    !updateData ||
+    typeof updateData.status !== 'string' ||
+    !allowedStatuses.includes(updateData.status)
+  ) {
+    throw new Error('Invalid or missing status for purchase update');
+  }
+
+  await db.collection('purchases').doc(id).update({
+    status: updateData.status,
+    updatedAt: new Date(),
+  });
+};
+
+// DELETE
 const remove = async (id) => {
-  await db.collection(COLLECTION_NAME).doc(id).delete()
-}
+  await db.collection('purchases').doc(id).update({
+    isDeleted: true,
+    updatedAt: new Date(),
+  });
+};
 
 module.exports = {
-  create,
+  addPurchaseWithTransaction,
   getAll,
   getById,
   update,

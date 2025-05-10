@@ -1,5 +1,4 @@
 const db = require('firebase-admin').firestore();
-const OrderDTO = require('../dtos/orderDTO');
 
 const getOrders = async () => {
   const snapshot = await db.collection('orders')
@@ -14,10 +13,22 @@ const getOrders = async () => {
   }).filter(order => order.isDeleted !== true);
 };
 
+const addOrderWithTransaction = async (rawData) => {
+  const dto = new OrderDTO(
+    rawData.customerId,
+    rawData.productId,
+    rawData.quantity,
+    rawData.status || 'pending'
+  );
 
-const addOrderWithTransaction = async (orderData) => {
+  if (!OrderDTO.validate(dto)) {
+    throw new Error('Invalid order data');
+  }
+
   const orderRef = db.collection('orders').doc();
-  const productRef = db.collection('products').doc(orderData.productId);
+  const productRef = db.collection('products').doc(dto.productId);
+  const paymentRef = db.collection('payments').doc();
+  const stockLogRef = db.collection('stock_changes').doc();
 
   await db.runTransaction(async (t) => {
     const productDoc = await t.get(productRef);
@@ -26,30 +37,42 @@ const addOrderWithTransaction = async (orderData) => {
     }
 
     const productData = productDoc.data();
-    if (productData.stock < orderData.quantity) {
+
+    if (productData.stock < dto.quantity) {
       throw new Error('Insufficient stock');
     }
 
-    const newStock = productData.stock - orderData.quantity;
+    const newStock = productData.stock - dto.quantity;
+    const totalPrice = productData.price * dto.quantity;
+    const now = new Date();
+
     t.update(productRef, { stock: newStock });
 
     t.set(orderRef, {
-      customerId: orderData.customerId,
-      productId: orderData.productId,
-      quantity: orderData.quantity,
-      status: orderData.status,
+      customerId: dto.customerId,
+      productId: dto.productId,
+      quantity: dto.quantity,
+      totalPrice,
+      status: dto.status,
       isDeleted: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: now,
+      updatedAt: now,
     });
 
-    const stockLogRef = db.collection('stock_changes').doc();
     t.set(stockLogRef, {
-      product_id: orderData.productId,
+      product_id: dto.productId,
       change_type: 'subtract',
-      quantity: orderData.quantity,
-      timestamp: new Date(),
-      note: 'Order placed via transaction',
+      quantity: dto.quantity,
+      timestamp: now,
+      note: 'Order placed via transaction'
+    });
+
+    t.set(paymentRef, {
+      orderId: orderRef.id,
+      amount: totalPrice,
+      status: 'pending',
+      method: null,
+      createdAt: now,
     });
   });
 

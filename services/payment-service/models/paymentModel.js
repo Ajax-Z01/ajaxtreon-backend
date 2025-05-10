@@ -1,10 +1,21 @@
 const admin = require('firebase-admin');
-const db = require('firebase-admin').firestore();
+const db = admin.firestore();
+const PaymentDTO = require('../dtos/paymentDTO');
 
 const createPayment = async (paymentData) => {
+  const errors = PaymentDTO.validate(paymentData);
+  if (errors.length > 0) {
+    throw new Error('Validation failed: ' + errors.join(', '));
+  }
+
   try {
+    const paymentDTO = new PaymentDTO(paymentData);
     const paymentRef = db.collection('payments').doc();
-    await paymentRef.set(paymentData);
+    await paymentRef.set({
+      ...paymentDTO,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: null
+    });
     return paymentRef.id;
   } catch (error) {
     throw new Error('Error creating payment: ' + error.message);
@@ -14,8 +25,7 @@ const createPayment = async (paymentData) => {
 const getAllPayments = async () => {
   try {
     const snapshot = await db.collection('payments').get();
-    const payments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    return payments;
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   } catch (error) {
     throw new Error('Error fetching payments: ' + error.message);
   }
@@ -35,16 +45,23 @@ const getPaymentById = async (paymentId) => {
 };
 
 const updatePaymentStatus = async (paymentId, status) => {
+  const validStatuses = ['pending', 'paid', 'failed'];
+  if (!validStatuses.includes(status)) {
+    throw new Error('Invalid status value');
+  }
+
   try {
     const paymentRef = db.collection('payments').doc(paymentId);
-    await paymentRef.update({ status, updatedAt: admin.firestore.FieldValue.serverTimestamp() });
+    await paymentRef.update({
+      status,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
     return { message: 'Payment status updated' };
   } catch (error) {
     throw new Error('Error updating payment status: ' + error.message);
   }
 };
 
-// Delete payment
 const deletePayment = async (paymentId) => {
   try {
     const paymentRef = db.collection('payments').doc(paymentId);
@@ -55,4 +72,10 @@ const deletePayment = async (paymentId) => {
   }
 };
 
-module.exports = { createPayment, getAllPayments, getPaymentById, updatePaymentStatus, deletePayment };
+module.exports = {
+  createPayment,
+  getAllPayments,
+  getPaymentById,
+  updatePaymentStatus,
+  deletePayment
+};
