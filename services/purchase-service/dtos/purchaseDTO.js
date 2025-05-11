@@ -1,53 +1,62 @@
 class PurchaseDTO {
-    constructor(supplierId, productId, quantity, status = 'pending') {
-      this.supplierId = supplierId;
-      this.productId = productId;
-      this.quantity = quantity;
-      this.status = status;
-      this.createdAt = new Date();
-      this.updatedAt = new Date();
-    }
-  
-    // Validasi data purchase
-    static validate(data) {
-      return (
-        typeof data.supplierId === 'string' &&
-        data.supplierId.trim() !== '' &&
-        typeof data.productId === 'string' &&
-        data.productId.trim() !== '' &&
-        typeof data.quantity === 'number' &&
-        data.quantity > 0 &&
-        typeof data.status === 'string' &&
-        ['pending', 'completed', 'cancelled'].includes(data.status) &&
-        data.createdAt instanceof Date &&
-        !isNaN(data.createdAt) &&
-        data.updatedAt instanceof Date &&
-        !isNaN(data.updatedAt)
-      );
-    }
-  
-    // Transformasi untuk dikirim ke Firestore
-    static transformToFirestore(data) {
-      return {
-        supplierId: data.supplierId.trim(),
-        productId: data.productId.trim(),
-        quantity: data.quantity,
-        status: data.status,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
-      };
-    }
-  
-    // Transformasi dari Firestore ke DTO
-    static transformFromFirestore(doc) {
-      return new PurchaseDTO(
-        doc.supplierId,
-        doc.productId,
-        doc.quantity,
-        doc.status
-      );
-    }
+  constructor(supplierId, productId, quantity, status = 'pending') {
+    this.supplierId = supplierId;
+    this.productId = productId;
+    this.quantity = quantity;
+    this.status = status;
+    this.isDeleted = false;
+    this.createdAt = new Date();
+    this.updatedAt = new Date();
+  }
+
+  static validate(data) {
+    return (
+      typeof data.supplierId === 'string' &&
+      data.supplierId.trim() !== '' &&
+      typeof data.productId === 'string' &&
+      data.productId.trim() !== '' &&
+      typeof data.quantity === 'number' &&
+      data.quantity > 0 &&
+      ['pending', 'completed', 'cancelled'].includes(data.status) &&
+      data.createdAt instanceof Date &&
+      !isNaN(data.createdAt) &&
+      data.updatedAt instanceof Date &&
+      !isNaN(data.updatedAt)
+    );
+  }
+
+  static validateUpdate(data) {
+    return (
+      data &&
+      typeof data.status === 'string' &&
+      ['pending', 'completed', 'cancelled'].includes(data.status)
+    );
+  }
+
+  static transformToFirestore(data) {
+    return {
+      supplierId: data.supplierId.trim(),
+      productId: data.productId.trim(),
+      quantity: data.quantity,
+      status: data.status,
+      isDeleted: data.isDeleted,
+      createdAt: data.createdAt,
+      updatedAt: data.updatedAt,
+    };
   }
   
-  module.exports = PurchaseDTO;
-  
+  static transformFromFirestore(doc, id) {
+    return {
+      id,
+      supplierId: doc.supplierId,
+      productId: doc.productId,
+      quantity: doc.quantity,
+      status: doc.status,
+      isDeleted: doc.isDeleted,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
+    };
+  }
+}
+
+module.exports = PurchaseDTO;

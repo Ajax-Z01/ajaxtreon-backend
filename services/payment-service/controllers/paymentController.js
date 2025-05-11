@@ -1,4 +1,3 @@
-const { validationResult } = require('express-validator');
 const paymentModel = require('../models/paymentModel');
 
 // Get all payments
@@ -14,37 +13,36 @@ const getPayments = async (req, res) => {
 
 // Add new payment
 const addPayment = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
   try {
     const { orderId, amount, method } = req.body;
-    const paymentData = { orderId, amount, method, status: 'pending', createdAt: new Date(), updatedAt: new Date() };
+    const paymentData = {
+      orderId,
+      amount,
+      method,
+      status: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
     const paymentId = await paymentModel.createPayment(paymentData);
     res.status(201).json({ message: 'Payment created', paymentId });
   } catch (error) {
     console.error('Error creating payment:', error);
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
 // Update payment status
 const updatePaymentStatus = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
   try {
     const { status } = req.body;
     const { id } = req.params;
+
     await paymentModel.updatePaymentStatus(id, status);
     res.json({ message: 'Payment status updated' });
   } catch (error) {
     console.error('Error updating payment status:', error);
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 

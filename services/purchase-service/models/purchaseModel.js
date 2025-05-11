@@ -1,6 +1,6 @@
 const admin = require('firebase-admin');
 const db = admin.firestore();
-const PurchaseDTO = require('../dtos/purchaseDTO')
+const PurchaseDTO = require('../dtos/purchaseDTO');
 
 // CREATE
 const addPurchaseWithTransaction = async (rawData) => {
@@ -8,7 +8,7 @@ const addPurchaseWithTransaction = async (rawData) => {
     rawData.supplierId,
     rawData.productId,
     rawData.quantity,
-    rawData.status || 'pending'
+    rawData.status
   );
 
   if (!PurchaseDTO.validate(dto)) {
@@ -29,13 +29,14 @@ const addPurchaseWithTransaction = async (rawData) => {
 
     const productData = productDoc.data();
     const newStock = productData.stock + dto.quantity;
+
     t.update(productRef, { stock: newStock });
 
     t.set(purchaseRef, {
       ...purchaseData,
       isDeleted: false,
       createdAt: dto.createdAt,
-      updatedAt: dto.updatedAt
+      updatedAt: dto.updatedAt,
     });
 
     t.set(stockLogRef, {
@@ -43,37 +44,34 @@ const addPurchaseWithTransaction = async (rawData) => {
       change_type: 'add',
       quantity: dto.quantity,
       timestamp: dto.createdAt,
-      note: 'Stock added via purchase transaction'
+      note: 'Stock added via purchase transaction',
     });
   });
 
   return purchaseRef.id;
 };
 
+// READ
 const getAll = async () => {
-  const snapshot = await db.collection('purchases').where('isDeleted', '!=', true).get();
-  return snapshot.docs.map(doc => {
-    const data = doc.data();
-    return { ...data, id: doc.id };
-  });
+  const snapshot = await db.collection('purchases')
+    .where('isDeleted', '!=', true)
+    .get();
+
+  return snapshot.docs.map(doc =>
+    PurchaseDTO.transformFromFirestore(doc.data(), doc.id)
+  );
 };
 
 const getById = async (id) => {
   const doc = await db.collection('purchases').doc(id).get();
   if (!doc.exists || doc.data().isDeleted) return null;
-  const data = doc.data();
-  return { ...data, id };
+
+  return PurchaseDTO.transformFromFirestore(doc.data(), doc.id);
 };
 
 // UPDATE
 const update = async (id, updateData) => {
-  const allowedStatuses = ['pending', 'completed', 'cancelled'];
-
-  if (
-    !updateData ||
-    typeof updateData.status !== 'string' ||
-    !allowedStatuses.includes(updateData.status)
-  ) {
+  if (!PurchaseDTO.validateUpdate(updateData)) {
     throw new Error('Invalid or missing status for purchase update');
   }
 
@@ -96,5 +94,5 @@ module.exports = {
   getAll,
   getById,
   update,
-  remove
-}
+  remove,
+};

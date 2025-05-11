@@ -1,4 +1,3 @@
-const { validationResult } = require('express-validator');
 const orderModel = require('../models/orderModel');
 
 const getOrders = async (req, res) => {
@@ -17,45 +16,33 @@ const addOrder = async (req, res) => {
     res.status(201).json({ id: orderId });
   } catch (error) {
     console.error('Transaction failed:', error);
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
 const updateOrder = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
   const { id } = req.params;
   const { status } = req.body;
-
-  const validStatuses = ['pending', 'completed', 'cancelled'];
-  if (!validStatuses.includes(status)) {
-    return res.status(400).json({ message: 'Invalid status value' });
-  }
 
   try {
     await orderModel.updateOrder(id, status);
     res.json({ message: 'Order status updated' });
   } catch (error) {
     console.error('Error updating order:', error);
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
-const deleteOrder = async (id) => {
-  const orderRef = db.collection('orders').doc(id);
-  const orderDoc = await orderRef.get();
+const deleteOrder = async (req, res) => {
+  const { id } = req.params;
 
-  if (!orderDoc.exists) {
-    throw new Error('Order not found');
+  try {
+    await orderModel.deleteOrder(id);
+    res.json({ message: 'Order soft-deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting order:', error);
+    res.status(400).json({ message: error.message });
   }
-
-  await orderRef.update({
-    isDeleted: true,
-    deletedAt: new Date(),
-  });
 };
 
 module.exports = {
