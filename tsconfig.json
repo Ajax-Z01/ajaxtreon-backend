@@ -8,16 +8,16 @@
   "esModuleInterop": true,
   "moduleResolution": "node",
   "resolveJsonModule": true,
-  "baseUrl": ".",
+  "baseUrl": "src",
   "paths": {
-    "@shared/*": ["src/shared/*"]
+    "@shared/*": ["shared/*"]
   },
   "skipLibCheck": true
   },
   "include": [
-  "src/**/*",
-  "src/services/**/*",
-  "src/shared/**/*"
+  "**/*",
+  "services/**/*",
+  "shared/**/*"
   ],  
   "exclude": [
     "node_modules",

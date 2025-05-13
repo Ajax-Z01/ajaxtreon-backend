@@ -6,10 +6,10 @@ import 'module-alias/register';
 
 // Import the services
 import authService from './services/auth-service/src';
-// import userService from './services/user-service/src';
+import userService from './services/user-service/src';
 import inventoryService from './services/inventory-service/src';
-// import paymentService from './services/payment-service/src';
-// import purchaseService from './services/purchase-service/src';
+import paymentService from './services/payment-service/src';
+import purchaseService from './services/purchase-service/src';
 import orderService from './services/order-service/src';
 
 dotenv.config();
@@ -28,10 +28,10 @@ app.get('/', (req: Request, res: Response) => {
 
 // Mount the services
 app.use('/auth', authService);
-// app.use('/user', userService);
+app.use('/user', userService);
 app.use('/inventory', inventoryService);
-// app.use('/payment', paymentService);
-// app.use('/purchase', purchaseService);
+app.use('/payment', paymentService);
+app.use('/purchase', purchaseService);
 app.use('/order', orderService);
 
 // Error handler

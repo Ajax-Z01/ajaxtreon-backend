@@ -15,7 +15,8 @@ const authenticateUser = async (req: Request, res: Response, next: NextFunction)
     const token = authHeader.split(' ')[1];
     const decodedToken = await admin.auth().verifyIdToken(token);
 
-    req.user = {
+    // Store the user information in res.locals instead of req.user
+    res.locals.user = {
       uid: decodedToken.uid,
       email: decodedToken.email ?? '',
       role: decodedToken.role ?? 'user',
@@ -35,7 +36,7 @@ const authenticateUser = async (req: Request, res: Response, next: NextFunction)
 
 // Middleware: Authorize user with specific roles
 const authorizeRoles = (...roles: string[]) => (req: Request, res: Response, next: NextFunction): void => {
-  const userRole = req.user?.role;
+  const userRole = res.locals.user?.role;
 
   if (!userRole || !roles.includes(userRole)) {
     res.status(403).json({ message: 'Forbidden: Insufficient role' });
@@ -47,12 +48,14 @@ const authorizeRoles = (...roles: string[]) => (req: Request, res: Response, nex
 
 // Middleware: Only allow admin users
 const authorizeAdmin = (req: Request, res: Response, next: NextFunction): void => {
-  if (!req.user?.role) {
+  const userRole = res.locals.user?.role;
+
+  if (!userRole) {
     res.status(403).json({ message: 'Missing role in token' });
     return;
   }
 
-  if (req.user.role !== 'admin') {
+  if (userRole !== 'admin') {
     res.status(403).json({ message: 'Forbidden: Admin access required' });
     return;
   }

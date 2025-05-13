@@ -1,8 +1,8 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import authController from '../controllers';
 import { authenticateUser } from '@shared/middlewares/authMiddleware';
 
-const router: Router = Router();
+const router: Router = express.Router();
 
 // @route POST /api/auth/register
 router.post('/register', authController.registerUser);
