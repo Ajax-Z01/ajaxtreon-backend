@@ -1,31 +1,35 @@
+import { OrderStatus } from '../types/order';
+
 class OrderDTO {
   customerId: string;
   productId: string;
   quantity: number;
-  status: 'pending' | 'completed' | 'cancelled';
+  status: OrderStatus;
   isDeleted: boolean;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 
   constructor(
     customerId: string,
     productId: string,
     quantity: number,
-    status: 'pending' | 'completed' | 'cancelled',
+    status: OrderStatus = 'pending',
     isDeleted: boolean = false,
     createdAt: Date = new Date(),
-    updatedAt: Date = new Date()
+    updatedAt: Date = new Date(),
+    deletedAt: Date | null = null
   ) {
     this.customerId = customerId;
     this.productId = productId;
     this.quantity = quantity;
-    this.status = status || 'pending';  // Default to 'pending' if status not provided
+    this.status = status;
     this.isDeleted = isDeleted;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
+    this.deletedAt = deletedAt;
   }
 
-  // Validate order data
   static validate(data: OrderDTO): string[] {
     const errors: string[] = [];
 
@@ -41,32 +45,25 @@ class OrderDTO {
       errors.push('Quantity must be a positive number');
     }
 
-    if (typeof data.isDeleted !== 'boolean') {
-      errors.push('isDeleted must be a boolean');
-    }
-
     if (!['pending', 'completed', 'cancelled'].includes(data.status)) {
-      errors.push('Status must be one of: pending, completed, cancelled');
+      errors.push('Invalid status value');
     }
 
     if (!(data.createdAt instanceof Date) || isNaN(data.createdAt.getTime())) {
-      errors.push('Invalid or missing createdAt');
+      errors.push('Invalid createdAt');
     }
 
     if (!(data.updatedAt instanceof Date) || isNaN(data.updatedAt.getTime())) {
-      errors.push('Invalid or missing updatedAt');
+      errors.push('Invalid updatedAt');
     }
 
     return errors;
   }
 
-  // Validate order update
   static validateUpdate(status: string): boolean {
-    const validStatuses = ['pending', 'completed', 'cancelled'];
-    return validStatuses.includes(status);
+    return ['pending', 'completed', 'cancelled'].includes(status);
   }
 
-  // Transform data to Firestore format
   static transformToFirestore(dto: OrderDTO) {
     return {
       customerId: dto.customerId.trim(),
@@ -76,20 +73,24 @@ class OrderDTO {
       isDeleted: dto.isDeleted,
       createdAt: dto.createdAt,
       updatedAt: dto.updatedAt,
+      deletedAt: dto.deletedAt,
     };
   }
 
-  // Transform data from Firestore to DTO format
-  static transformFromFirestore(doc: FirebaseFirestore.DocumentSnapshot): OrderDTO {
+  static transformFromFirestore(
+    doc: FirebaseFirestore.DocumentSnapshot
+  ): OrderDTO {
     const data = doc.data();
+
     return new OrderDTO(
       data?.customerId ?? '',
       data?.productId ?? '',
       data?.quantity ?? 0,
       data?.status ?? 'pending',
       data?.isDeleted ?? false,
-      data?.createdAt.toDate() ?? new Date(),
-      data?.updatedAt.toDate() ?? new Date()
+      data?.createdAt?.toDate?.() ?? new Date(),
+      data?.updatedAt?.toDate?.() ?? new Date(),
+      data?.deletedAt?.toDate?.() ?? null
     );
   }
 }

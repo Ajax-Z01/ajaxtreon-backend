@@ -1,3 +1,4 @@
+import { Timestamp } from 'firebase-admin/firestore';
 import { PurchaseData, PurchaseStatus } from '../types/purchase';
 
 class PurchaseDTO {
@@ -7,7 +8,8 @@ class PurchaseDTO {
   status: PurchaseStatus;
   isDeleted: boolean;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt: Date | null;
+  deletedAt: Date | null;
 
   constructor(
     supplierId: string,
@@ -21,10 +23,12 @@ class PurchaseDTO {
     this.status = status;
     this.isDeleted = false;
     this.createdAt = new Date();
-    this.updatedAt = new Date();
+    this.updatedAt = null;
+    this.deletedAt = null;
   }
 
   static validate(data: PurchaseData): boolean {
+    const isValidDate = (d: any) => d instanceof Date && !isNaN(d.getTime());
     return (
       typeof data.supplierId === 'string' &&
       data.supplierId.trim() !== '' &&
@@ -33,10 +37,9 @@ class PurchaseDTO {
       typeof data.quantity === 'number' &&
       data.quantity > 0 &&
       ['pending', 'completed', 'cancelled'].includes(data.status) &&
-      data.createdAt instanceof Date &&
-      !isNaN(data.createdAt.getTime()) &&
-      data.updatedAt instanceof Date &&
-      !isNaN(data.updatedAt.getTime())
+      isValidDate(data.createdAt) &&
+      (data.updatedAt === null || isValidDate(data.updatedAt)) &&
+      (data.deletedAt === null || isValidDate(data.deletedAt))
     );
   }
 
@@ -58,8 +61,9 @@ class PurchaseDTO {
       quantity: data.quantity,
       status: data.status,
       isDeleted: data.isDeleted,
-      createdAt: data.createdAt,
-      updatedAt: data.updatedAt,
+      createdAt: Timestamp.fromDate(data.createdAt),
+      updatedAt: data.updatedAt ? Timestamp.fromDate(data.updatedAt) : null,
+      deletedAt: data.deletedAt ? Timestamp.fromDate(data.deletedAt) : null,
     };
   }
 
@@ -73,9 +77,10 @@ class PurchaseDTO {
       productId: doc.productId,
       quantity: doc.quantity,
       status: doc.status,
-      isDeleted: doc.isDeleted,
-      createdAt: doc.createdAt instanceof Date ? doc.createdAt : new Date(),
-      updatedAt: doc.updatedAt instanceof Date ? doc.updatedAt : new Date(),
+      isDeleted: doc.isDeleted ?? false,
+      createdAt: doc.createdAt?.toDate?.() ?? new Date(),
+      updatedAt: doc.updatedAt?.toDate?.() ?? null,
+      deletedAt: doc.deletedAt?.toDate?.() ?? null,
     };
   }
 }

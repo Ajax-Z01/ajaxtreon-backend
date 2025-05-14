@@ -2,7 +2,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 export type PurchaseStatus = 'pending' | 'completed' | 'cancelled';
 
-export interface PurchaseData {
+export interface Purchase {
   supplierId: string;
   productId: string;
   quantity: number;

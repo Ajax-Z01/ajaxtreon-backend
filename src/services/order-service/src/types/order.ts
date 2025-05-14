@@ -1,29 +1,32 @@
-import { firestore } from 'firebase-admin';``
+import { Timestamp } from 'firebase-admin/firestore';
+
+
+export type OrderStatus = 'pending' | 'completed' | 'cancelled';
 
 export interface Order {
   id: string;
   customerId: string;
   productId: string;
   quantity: number;
-  status: 'pending' | 'completed' | 'cancelled';
+  status: OrderStatus;
   isDeleted?: boolean;
-  createdAt?: firestore.Timestamp;
-  updatedAt?: firestore.Timestamp;
-  deletedAt?: firestore.Timestamp;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+  deletedAt?: Timestamp;
 }
 
 export interface OrderRequestBody {
   customerId: string;
   productId: string;
   quantity: number;
-  status?: string;
+  status?: OrderStatus;
 }
 
 export interface StockChange {
   product_id: string;
   change_type: 'add' | 'subtract';
   quantity: number;
-  timestamp: firestore.Timestamp;
+  timestamp: Timestamp;
   note: string;
 }
 
@@ -32,5 +35,5 @@ export interface Payment {
   amount: number;
   status: 'pending' | 'completed' | 'failed';
   method: string | null;
-  createdAt: firestore.Timestamp;
+  createdAt: Timestamp;
 }

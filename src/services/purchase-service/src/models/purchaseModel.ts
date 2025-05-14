@@ -44,7 +44,6 @@ const addPurchaseWithTransaction = async (rawData: PurchaseData): Promise<string
       ...purchaseData,
       isDeleted: false,
       createdAt: dto.createdAt,
-      updatedAt: dto.updatedAt,
     });
 
     t.set(stockLogRef, {
@@ -92,11 +91,11 @@ const update = async (id: string, updateData: { status: PurchaseStatus }): Promi
   });
 };
 
-
 // DELETE
 const remove = async (id: string): Promise<void> => {
   await db.collection('purchases').doc(id).update({
     isDeleted: true,
+    deletedAt: new Date(),
     updatedAt: new Date(),
   });
 };
