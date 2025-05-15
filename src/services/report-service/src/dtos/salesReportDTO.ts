@@ -11,13 +11,15 @@ class SalesReportDTO {
     this.createdAt = createdAt;
   }
 
-  static fromFirestore(orderData: any): SalesReportDTO {
-    return new SalesReportDTO(
+  static fromOrder(orderData: any): SalesReportDTO[] {
+    const createdAt = orderData.createdAt?.toDate?.() ?? new Date();
+
+    return orderData.items.map((item: any) => new SalesReportDTO(
       orderData.customerId,
-      orderData.productId,
-      orderData.quantity,
-      orderData.createdAt.toDate()
-    );
+      item.productId,
+      item.quantity,
+      createdAt
+    ));
   }
 }
 

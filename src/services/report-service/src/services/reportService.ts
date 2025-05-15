@@ -20,7 +20,18 @@ const generatePurchaseReport = async (startDate: string, endDate: string): Promi
   }
 };
 
+const generateStockReport = async (startDate: string, endDate: string): Promise<any> => {
+  try {
+    const stockData = await reportModel.getStockReport(startDate, endDate);
+    return stockData;
+  } catch (error) {
+    console.error('Error in reportService:', error);
+    throw new Error('Error in generating stock report');
+  }
+};
+
 export default {
   generateSalesReport,
   generatePurchaseReport,
+  generateStockReport,
 };

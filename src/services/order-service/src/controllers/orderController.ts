@@ -5,9 +5,8 @@ import { OrderRequestBody } from '../types/order';
 const getOrders = async (req: Request, res: Response): Promise<void> => {
   try {
     const orders = await orderModel.getOrders();
-    res.status(200).json(orders); // Adding proper status code
+    res.status(200).json(orders);
   } catch (error: unknown) {
-    // Consistent error handling
     handleError(error, res, 'Error getting orders');
   }
 };
@@ -15,9 +14,8 @@ const getOrders = async (req: Request, res: Response): Promise<void> => {
 const addOrder = async (req: Request<{}, {}, OrderRequestBody>, res: Response): Promise<void> => {
   try {
     const orderId = await orderModel.addOrderWithTransaction(req.body);
-    res.status(201).json({ id: orderId }); // Adding status code for created resources
+    res.status(201).json({ id: orderId });
   } catch (error: unknown) {
-    // Consistent error handling
     handleError(error, res, 'Transaction failed');
   }
 };
@@ -26,11 +24,15 @@ const updateOrder = async (req: Request<{ id: string }, {}, { status: string }>,
   const { id } = req.params;
   const { status } = req.body;
 
+  if (!status || !['pending', 'completed', 'cancelled'].includes(status)) {
+    res.status(400).json({ message: 'Invalid status value' });
+    return;
+  }
+
   try {
     await orderModel.updateOrder(id, status);
-    res.status(200).json({ message: 'Order status updated' }); // Added proper status code for success
+    res.status(200).json({ message: 'Order status updated' });
   } catch (error: unknown) {
-    // Consistent error handling
     handleError(error, res, 'Error updating order');
   }
 };
@@ -40,9 +42,8 @@ const deleteOrder = async (req: Request<{ id: string }>, res: Response): Promise
 
   try {
     await orderModel.deleteOrder(id);
-    res.status(200).json({ message: 'Order soft-deleted successfully' }); // Added proper status code for success
+    res.status(200).json({ message: 'Order soft-deleted successfully' });
   } catch (error: unknown) {
-    // Consistent error handling
     handleError(error, res, 'Error deleting order');
   }
 };

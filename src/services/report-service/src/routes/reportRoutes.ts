@@ -7,4 +7,6 @@ router.get('/sales', reportController.getSalesReport);
 
 router.get('/purchases', reportController.getPurchaseReport);
 
+router.get('/stock', reportController.getStockReport);
+
 export default router;
