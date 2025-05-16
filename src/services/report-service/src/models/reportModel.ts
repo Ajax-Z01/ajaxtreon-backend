@@ -2,6 +2,7 @@ import admin from 'firebase-admin';
 import { SalesReportDTO } from '../dtos/salesReportDTO';
 import { PurchaseReportDTO } from '../dtos/purchaseReportDTO';
 import { StockReportDTO } from '../dtos/stockReportDTO';
+import { RevenueReportDTO } from '../dtos/revenueReportDTO';
 import { Order } from '../types/order';
 import { Purchase } from '../types/purchase';
 import { StockChange } from '../types/stock';
@@ -73,6 +74,7 @@ const getPurchaseData = async (startDate: string, endDate: string): Promise<any[
 const getStockReport = async (startDate: string, endDate: string): Promise<any[]> => {
   const start = new Date(startDate);
   const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
 
   const startTimestamp = admin.firestore.Timestamp.fromDate(start);
   const endTimestamp = admin.firestore.Timestamp.fromDate(end);
@@ -140,9 +142,80 @@ const getStockReport = async (startDate: string, endDate: string): Promise<any[]
   }
 };
 
+const getStockChangeHistory = async (startDate: string, endDate: string): Promise<StockChange[]> => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  const startTimestamp = admin.firestore.Timestamp.fromDate(start);
+  const endTimestamp = admin.firestore.Timestamp.fromDate(end);
+
+  try {
+    const snapshot = await db.collection('stock_changes')
+      .where('timestamp', '>=', startTimestamp)
+      .where('timestamp', '<=', endTimestamp)
+      .get();
+
+    if (snapshot.empty) {
+      console.log('No stock changes found in the given range');
+      return [];
+    }
+
+    const changes: StockChange[] = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...(doc.data() as StockChange),
+      timestamp: (doc.data().timestamp as admin.firestore.Timestamp).toDate(),
+    }));
+
+    return changes;
+  } catch (error) {
+    console.error('Error fetching stock change history:', error);
+    throw new Error('Error fetching stock change history');
+  }
+};
+
+const getRevenueReport = async (startDate: string, endDate: string): Promise<RevenueReportDTO[]> => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  end.setHours(23, 59, 59, 999);
+
+  const startTimestamp = admin.firestore.Timestamp.fromDate(start);
+  const endTimestamp = admin.firestore.Timestamp.fromDate(end);
+
+  try {
+    const snapshot = await db.collection('orders')
+      .where('createdAt', '>=', startTimestamp)
+      .where('createdAt', '<=', endTimestamp)
+      .where('isDeleted', '==', false)
+      .where('status', '==', 'completed')
+      .get();
+
+    if (snapshot.empty) {
+      console.log('No matching completed orders found');
+      return [];
+    }
+
+    const revenueReports: RevenueReportDTO[] = [];
+
+    snapshot.docs.forEach(doc => {
+      const order = doc.data() as Order;
+      const report = RevenueReportDTO.fromOrder(order);
+      if (report) {
+        revenueReports.push(report);
+      }
+    });
+
+    return revenueReports;
+  } catch (error) {
+    console.error('Error fetching revenue report data:', error);
+    throw new Error('Error fetching revenue report data');
+  }
+};
 
 export default {
   getSalesData,
   getPurchaseData,
-  getStockReport
+  getStockReport,
+  getStockChangeHistory,
+  getRevenueReport
 };

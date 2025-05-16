@@ -30,8 +30,30 @@ const generateStockReport = async (startDate: string, endDate: string): Promise<
   }
 };
 
+const generateStockHistory = async (startDate: string, endDate: string): Promise<any> => {
+  try {
+    const stockHistory = await reportModel.getStockChangeHistory(startDate, endDate);
+    return stockHistory;
+  } catch (error) {
+    console.error('Error in reportService:', error);
+    throw new Error('Error in generating stock history report');
+  }
+};
+
+const generateRevenueReport = async (startDate: string, endDate: string): Promise<any> => {
+  try {
+    const data = await reportModel.getRevenueReport(startDate, endDate);
+    return data;
+  } catch (error) {
+    console.error('Error in generating revenue report:', error);
+    throw new Error('Error in generating revenue report');
+  }
+};
+
 export default {
   generateSalesReport,
   generatePurchaseReport,
   generateStockReport,
+  generateStockHistory,
+  generateRevenueReport,
 };

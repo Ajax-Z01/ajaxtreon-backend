@@ -1,6 +1,6 @@
 import admin from '@shared/firebaseAdmin';
 import ProductDTO from '../dtos/productDTO';
-import { Product } from '../types/product';
+import type { Product } from '../types/product';
 
 const firestore = admin.firestore;
 const db = firestore();
@@ -12,12 +12,16 @@ const getProducts = async (): Promise<Array<{ id: string } & Product>> => {
 };
 
 // Add a new product
-const addProduct = async (productData: Product): Promise<string> => {
+const addProduct = async (productData: Product & { createdBy: string }): Promise<string> => {
+  const now = new Date();
   const product = new ProductDTO(
     productData.name,
     productData.price,
     productData.stock,
-    productData.categoryId
+    productData.categoryId,
+    productData.createdBy,
+    now,
+    undefined
   );
   const transformedProduct = ProductDTO.transformToFirestore(product);
   const docRef = await db.collection('products').add(transformedProduct);
@@ -25,15 +29,30 @@ const addProduct = async (productData: Product): Promise<string> => {
 };
 
 // Update an existing product
-const updateProduct = async (id: string, productData: Product): Promise<void> => {
+const updateProduct = async (id: string, productData: Partial<Product>): Promise<void> => {
+  const docRef = db.collection('products').doc(id);
+  const docSnapshot = await docRef.get();
+
+  if (!docSnapshot.exists) {
+    throw new Error('Product not found');
+  }
+
+  const existingData = docSnapshot.data()!;
+  const updatedAt = new Date();
+
   const product = new ProductDTO(
-    productData.name,
-    productData.price,
-    productData.stock,
-    productData.categoryId
+    productData.name ?? existingData.name,
+    productData.price ?? existingData.price,
+    productData.stock ?? existingData.stock,
+    productData.categoryId ?? existingData.categoryId,
+    existingData.createdBy,
+    existingData.createdAt?.toDate ? existingData.createdAt.toDate() : existingData.createdAt,
+    updatedAt
   );
+
   const transformedProduct = ProductDTO.transformToFirestore(product);
-  await db.collection('products').doc(id).update(transformedProduct);
+
+  await docRef.update(transformedProduct);
 };
 
 // Delete a product

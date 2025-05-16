@@ -4,22 +4,71 @@ import PurchaseDTO from '../dtos/purchaseDTO';
 
 const db = admin.firestore();
 
+// Generate invoice number
+const generateInvoiceNo = async (): Promise<string> => {
+  const counterRef = db.collection('counters').doc('purchaseInvoice');
+  let invoiceNo = '';
+
+  await db.runTransaction(async (t) => {
+    const doc = await t.get(counterRef);
+    let currentCounter = 0;
+
+    if (doc.exists) {
+      currentCounter = doc.data()?.counter || 0;
+    }
+
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const d = String(now.getDate()).padStart(2, '0');
+
+    const newCounter = currentCounter + 1;
+    const counterStr = String(newCounter).padStart(4, '0');
+
+    invoiceNo = `INV${y}${m}${d}-${counterStr}`;
+
+    t.set(counterRef, { counter: newCounter }, { merge: true });
+  });
+
+  return invoiceNo;
+};
+
 // CREATE
 const addPurchaseWithTransaction = async (rawData: PurchaseData): Promise<string> => {
-  const { supplierId, productId, quantity, status = 'pending' }: PurchaseData = rawData;
+  if (!rawData.invoiceNo) {
+    rawData.invoiceNo = await generateInvoiceNo();
+  }
 
-  // Ensure status is of type PurchaseStatus (one of 'pending', 'completed', 'cancelled')
+  const {
+    supplierId,
+    productId,
+    quantity,
+    unitPrice,
+    status = 'pending',
+    createdBy,
+    approvedBy,
+    invoiceNo,
+    notes
+  } = rawData;
+
   const validStatuses: PurchaseStatus[] = ['pending', 'completed', 'cancelled'];
-
-  // Type-safe check for status being a valid PurchaseStatus
-  if (!validStatuses.includes(status as PurchaseStatus)) {
+  if (!validStatuses.includes(status)) {
     throw new Error('Invalid status for purchase');
   }
 
-  // Initialize PurchaseDTO with the status parameter
-  const dto = new PurchaseDTO(supplierId, productId, quantity, status as PurchaseStatus);
+  const dto = new PurchaseDTO(
+    supplierId,
+    productId,
+    quantity,
+    unitPrice,
+    status,
+    createdBy,
+    approvedBy,
+    invoiceNo,
+    notes
+  );
 
-  if (!PurchaseDTO.validate(dto)) {
+  if (!PurchaseDTO.validate(dto as PurchaseData)) {
     throw new Error('Invalid purchase data');
   }
 
@@ -42,15 +91,14 @@ const addPurchaseWithTransaction = async (rawData: PurchaseData): Promise<string
 
     t.set(purchaseRef, {
       ...purchaseData,
-      isDeleted: false,
-      createdAt: dto.createdAt,
+      createdAt: admin.firestore.Timestamp.fromDate(dto.createdAt),
     });
 
     t.set(stockLogRef, {
       product_id: dto.productId,
       change_type: 'add',
       quantity: dto.quantity,
-      timestamp: dto.createdAt,
+      timestamp: admin.firestore.Timestamp.fromDate(dto.createdAt),
       note: 'Stock added via purchase transaction',
     });
   });
@@ -80,15 +128,17 @@ const getById = async (id: string): Promise<PurchaseData | null> => {
 };
 
 // UPDATE
-const update = async (id: string, updateData: { status: PurchaseStatus }): Promise<void> => {
-  if (!PurchaseDTO.validateUpdate({ status: updateData.status })) {
+const update = async (id: string, updateData: Partial<PurchaseData>): Promise<void> => {
+  if (updateData.status && !PurchaseDTO.validateUpdate(updateData)) {
     throw new Error('Invalid or missing status for purchase update');
   }
 
-  await db.collection('purchases').doc(id).update({
-    status: updateData.status,
+  const updateFields: any = {
+    ...updateData,
     updatedAt: new Date(),
-  });
+  };
+
+  await db.collection('purchases').doc(id).update(updateFields);
 };
 
 // DELETE
