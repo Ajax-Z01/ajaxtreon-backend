@@ -95,8 +95,8 @@ const addPurchaseWithTransaction = async (rawData: PurchaseData): Promise<string
     });
 
     t.set(stockLogRef, {
-      product_id: dto.productId,
-      change_type: 'add',
+      productId: dto.productId,
+      changeType: 'add',
       quantity: dto.quantity,
       timestamp: admin.firestore.Timestamp.fromDate(dto.createdAt),
       note: 'Stock added via purchase transaction',

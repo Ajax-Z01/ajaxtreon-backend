@@ -1,20 +1,22 @@
+import type { Category } from '../types/category';
+
 export default class CategoryDTO {
-  name: string;
-  description: string;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt?: Date;
-  isActive: boolean;
-  slug?: string;
+  name: Category['name'];
+  description: Category['description'];
+  createdBy: Category['createdBy'];
+  createdAt: Category['createdAt'];
+  updatedAt?: Category['updatedAt'];
+  isActive: Category['isActive'];
+  slug?: Category['slug'];
 
   constructor(
-    name: string,
-    description: string,
-    createdBy: string,
-    createdAt: Date,
-    updatedAt?: Date,
-    isActive: boolean = true,
-    slug?: string
+    name: Category['name'],
+    description: Category['description'],
+    createdBy: Category['createdBy'],
+    createdAt: Category['createdAt'],
+    updatedAt?: Category['updatedAt'],
+    isActive: Category['isActive'] = true,
+    slug?: Category['slug']
   ) {
     this.name = name;
     this.description = description;

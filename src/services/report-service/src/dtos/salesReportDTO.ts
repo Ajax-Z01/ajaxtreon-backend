@@ -1,3 +1,5 @@
+import type { Order, OrderItem } from '../types/order';
+
 class SalesReportDTO {
   customerId: string;
   productId: string;
@@ -11,11 +13,11 @@ class SalesReportDTO {
     this.createdAt = createdAt;
   }
 
-  static fromOrder(orderData: any): SalesReportDTO[] {
-    const createdAt = orderData.createdAt?.toDate?.() ?? new Date();
+  static fromOrder(order: Order): SalesReportDTO[] {
+    const createdAt = order.createdAt?.toDate?.() ?? new Date();
 
-    return orderData.items.map((item: any) => new SalesReportDTO(
-      orderData.customerId,
+    return order.items.map((item: OrderItem) => new SalesReportDTO(
+      order.customerId,
       item.productId,
       item.quantity,
       createdAt

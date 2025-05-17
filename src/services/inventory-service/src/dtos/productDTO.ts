@@ -1,18 +1,20 @@
+import type { Product } from '../types/product';
+
 export default class ProductDTO {
-  name: string;
-  price: number;
-  stock: number;
-  categoryId: string;
-  createdBy: string;
+  name: Product['name'];
+  price: Product['price'];
+  stock: Product['stock'];
+  categoryId: Product['categoryId'];
+  createdBy: Product['createdBy'];
   createdAt?: Date;
   updatedAt?: Date;
 
   constructor(
-    name: string,
-    price: number,
-    stock: number,
-    categoryId: string,
-    createdBy: string,
+    name: Product['name'],
+    price: Product['price'],
+    stock: Product['stock'],
+    categoryId: Product['categoryId'],
+    createdBy: Product['createdBy'],
     createdAt?: Date,
     updatedAt?: Date
   ) {

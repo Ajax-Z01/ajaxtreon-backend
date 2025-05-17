@@ -2,6 +2,15 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 export type OrderStatus = 'pending' | 'completed' | 'cancelled';
 
+export interface OrderItem {
+  productId: string;
+  productName?: string;
+  quantity: number;
+  unitPrice: number;
+  discount?: number;
+  tax?: number;
+}
+
 export interface Order {
   id: string;
   customerId: string;
@@ -11,14 +20,7 @@ export interface Order {
   updatedAt?: Timestamp;
   deletedAt?: Timestamp;
 
-  items: {
-    productId: string;
-    productName?: string;
-    quantity: number;
-    unitPrice: number;
-    discount?: number;
-    tax?: number;
-  }[];
+  items: OrderItem[];
 
   totalAmount: number;
   discount?: number;

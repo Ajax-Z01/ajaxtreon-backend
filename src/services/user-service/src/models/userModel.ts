@@ -1,28 +1,34 @@
-import admin from '@shared/firebaseAdmin'; // Firebase Admin SDK
+import admin from '@shared/firebaseAdmin';
+import { UserDTO } from '../dtos/userDTO';
 import { UserData, UpdateUserData } from '../types/user';
 
 // Create user in Firebase Authentication and Firestore
-const createUser = async (email: string, password: string, name: string, role: string) => {
+const createUser = async (
+  email: string, 
+  password: string, 
+  name: string, 
+  role: 'admin' | 'user' | 'staff' | 'manager', 
+  phone?: string, 
+  address?: string
+) => {
   try {
-    // Create user in Firebase Authentication
-    const userRecord = await admin.auth().createUser({
-      email,
-      password,
-      displayName: name,
-    });
+    const userRecord = await admin.auth().createUser({ email, password, displayName: name });
 
-    // Set custom claims (role) for the user
     await admin.auth().setCustomUserClaims(userRecord.uid, { role });
 
-    // Store user data in Firestore
+    const createdAt = admin.firestore.FieldValue.serverTimestamp();
+
     await admin.firestore().collection('users').doc(userRecord.uid).set({
       email,
       name,
       role,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      isActive: true,
+      createdAt,
+      phone: phone || null,
+      address: address || null,
     });
 
-    return { uid: userRecord.uid }; // Return UID of the created user
+    return { uid: userRecord.uid };
   } catch (error: unknown) {
     if (error instanceof Error) {
       throw new Error('Error creating user: ' + error.message);
@@ -32,13 +38,15 @@ const createUser = async (email: string, password: string, name: string, role: s
 };
 
 // Get all users from Firestore
-const getAllUsers = async (): Promise<UserData[]> => {
+const getAllUsers = async (): Promise<UserDTO[]> => {
   try {
     const snapshot = await admin.firestore().collection('users').get();
-    if (snapshot.empty) {
-      return [];
-    }
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserData));
+    if (snapshot.empty) return [];
+
+    return snapshot.docs.map(doc => {
+      const data = doc.data() as UserData;
+      return UserDTO.fromFirestore(doc.id, data);
+    });
   } catch (error: unknown) {
     if (error instanceof Error) {
       throw new Error('Error getting all users: ' + error.message);
@@ -47,14 +55,18 @@ const getAllUsers = async (): Promise<UserData[]> => {
   }
 };
 
+
 // Get a user by ID from Firestore
-const getUserById = async (id: string): Promise<UserData | null> => {
+const getUserById = async (id: string): Promise<UserDTO | null> => {
   try {
     const userDoc = await admin.firestore().collection('users').doc(id).get();
-    if (!userDoc.exists) {
+    const data = userDoc.data();
+
+    if (!userDoc.exists || !data) {
       return null;
     }
-    return { id: userDoc.id, ...userDoc.data() } as UserData;
+
+    return UserDTO.fromFirestore(userDoc.id, data as UserData);
   } catch (error: unknown) {
     if (error instanceof Error) {
       throw new Error('Error getting user by ID: ' + error.message);
@@ -63,13 +75,23 @@ const getUserById = async (id: string): Promise<UserData | null> => {
   }
 };
 
-// Update a user's information
-const updateUser = async (id: string, updateData: UpdateUserData): Promise<UserData> => {
+const updateUser = async (id: string, updateData: UpdateUserData): Promise<UserDTO> => {
   try {
-    await admin.firestore().collection('users').doc(id).update(updateData as Record<string, any>);
+    const dataToUpdate = {
+      ...updateData,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
 
-    const updatedUserDoc = await admin.firestore().collection('users').doc(id).get();
-    return { id: updatedUserDoc.id, ...updatedUserDoc.data() } as UserData;
+    await admin.firestore().collection('users').doc(id).update(dataToUpdate);
+
+    const updatedDoc = await admin.firestore().collection('users').doc(id).get();
+    const data = updatedDoc.data();
+
+    if (!updatedDoc.exists || !data) {
+      throw new Error('User not found after update');
+    }
+
+    return UserDTO.fromFirestore(updatedDoc.id, data as UserData);
   } catch (error: unknown) {
     if (error instanceof Error) {
       throw new Error('Error updating user: ' + error.message);
@@ -78,14 +100,10 @@ const updateUser = async (id: string, updateData: UpdateUserData): Promise<UserD
   }
 };
 
-
-// Delete a user from Firestore and Firebase Authentication
+// Delete a user
 const deleteUser = async (id: string): Promise<void> => {
   try {
-    // Delete user from Firebase Authentication
     await admin.auth().deleteUser(id);
-
-    // Delete user from Firestore
     await admin.firestore().collection('users').doc(id).delete();
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -95,13 +113,10 @@ const deleteUser = async (id: string): Promise<void> => {
   }
 };
 
-// Set the role of a user (admin only)
-const setUserRoleInDb = async (id: string, role: string): Promise<void> => {
+// Set the role of a user
+const setUserRoleInDb = async (id: string, role: 'admin' | 'user' | 'staff' | 'manager'): Promise<void> => {
   try {
-    // Set custom claims (role) for the user
     await admin.auth().setCustomUserClaims(id, { role });
-
-    // Update role in Firestore
     await admin.firestore().collection('users').doc(id).update({ role });
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -111,7 +126,7 @@ const setUserRoleInDb = async (id: string, role: string): Promise<void> => {
   }
 };
 
-export {
+export default {
   createUser,
   getAllUsers,
   getUserById,

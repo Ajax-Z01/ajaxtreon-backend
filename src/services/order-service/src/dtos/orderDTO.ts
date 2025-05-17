@@ -1,14 +1,5 @@
-import { OrderStatus } from '../types/order';
-import { DocumentSnapshot } from 'firebase-admin/firestore';
-
-interface OrderItemDTO {
-  productId: string;
-  productName?: string;
-  quantity: number;
-  unitPrice: number;
-  discount?: number;
-  tax?: number;
-}
+import { Timestamp, DocumentSnapshot } from 'firebase-admin/firestore';
+import { Order, OrderItem, OrderStatus } from '../types/order';
 
 class OrderDTO {
   id?: string;
@@ -18,9 +9,7 @@ class OrderDTO {
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;
-
-  items: OrderItemDTO[];
-
+  items: OrderItem[];
   totalAmount: number;
   discount?: number;
   tax?: number;
@@ -29,116 +18,64 @@ class OrderDTO {
   paymentId?: string;
   createdBy?: string;
 
-  constructor(
-    customerId: string,
-    items: OrderItemDTO[],
-    totalAmount: number,
-    status: OrderStatus = 'pending',
-    isDeleted: boolean = false,
-    createdAt: Date = new Date(),
-    updatedAt: Date = new Date(),
-    deletedAt: Date | null = null,
-    discount?: number,
-    tax?: number,
-    paymentMethod?: string,
-    refundAmount?: number,
-    paymentId?: string,
-    createdBy?: string,
-    id?: string
-  ) {
-    this.id = id;
-    this.customerId = customerId;
-    this.items = items;
-    this.totalAmount = totalAmount;
-    this.status = status;
-    this.isDeleted = isDeleted;
-    this.createdAt = createdAt;
-    this.updatedAt = updatedAt;
-    this.deletedAt = deletedAt;
-    this.discount = discount;
-    this.tax = tax;
-    this.paymentMethod = paymentMethod;
-    this.refundAmount = refundAmount;
-    this.paymentId = paymentId;
-    this.createdBy = createdBy;
+  constructor(order: Omit<Order, 'createdAt' | 'updatedAt' | 'deletedAt'> & {
+    createdAt: Date;
+    updatedAt: Date;
+    deletedAt: Date | null;
+  }) {
+    this.id = order.id;
+    this.customerId = order.customerId;
+    this.status = order.status;
+    this.isDeleted = order.isDeleted ?? false;
+    this.createdAt = order.createdAt;
+    this.updatedAt = order.updatedAt;
+    this.deletedAt = order.deletedAt;
+    this.items = order.items;
+    this.totalAmount = order.totalAmount;
+    this.discount = order.discount;
+    this.tax = order.tax;
+    this.paymentMethod = order.paymentMethod;
+    this.refundAmount = order.refundAmount;
+    this.paymentId = order.paymentId;
+    this.createdBy = order.createdBy;
   }
 
-  static validate(dto: OrderDTO): string[] {
-    const errors: string[] = [];
+  static fromFirestore(doc: DocumentSnapshot): OrderDTO {
+    const data = doc.data();
 
-    if (!dto.customerId || typeof dto.customerId !== 'string' || dto.customerId.trim() === '') {
-      errors.push('Invalid or missing customerId');
-    }
+    const toDateSafe = (val: Timestamp | undefined): Date => {
+      return val?.toDate() ?? new Date();
+    };
 
-    if (!Array.isArray(dto.items) || dto.items.length === 0) {
-      errors.push('Items must be a non-empty array');
-    } else {
-      dto.items.forEach((item, index) => {
-        if (!item.productId || typeof item.productId !== 'string' || item.productId.trim() === '') {
-          errors.push(`Item ${index} has invalid or missing productId`);
-        }
-        if (typeof item.quantity !== 'number' || item.quantity <= 0) {
-          errors.push(`Item ${index} quantity must be a positive number`);
-        }
-        if (typeof item.unitPrice !== 'number' || item.unitPrice < 0) {
-          errors.push(`Item ${index} unitPrice must be a non-negative number`);
-        }
-        if (item.discount !== undefined && (typeof item.discount !== 'number' || item.discount < 0)) {
-          errors.push(`Item ${index} discount must be a non-negative number`);
-        }
-        if (item.tax !== undefined && (typeof item.tax !== 'number' || item.tax < 0)) {
-          errors.push(`Item ${index} tax must be a non-negative number`);
-        }
-      });
-    }
-
-    if (typeof dto.totalAmount !== 'number' || dto.totalAmount < 0) {
-      errors.push('totalAmount must be a non-negative number');
-    }
-
-    if (dto.discount !== undefined && (typeof dto.discount !== 'number' || dto.discount < 0)) {
-      errors.push('discount must be a non-negative number');
-    }
-
-    if (dto.tax !== undefined && (typeof dto.tax !== 'number' || dto.tax < 0)) {
-      errors.push('tax must be a non-negative number');
-    }
-
-    if (!['pending', 'completed', 'cancelled'].includes(dto.status)) {
-      errors.push('Invalid status value');
-    }
-
-    if (!(dto.createdAt instanceof Date) || isNaN(dto.createdAt.getTime())) {
-      errors.push('Invalid createdAt');
-    }
-
-    if (!(dto.updatedAt instanceof Date) || isNaN(dto.updatedAt.getTime())) {
-      errors.push('Invalid updatedAt');
-    }
-
-    return errors;
+    return new OrderDTO({
+      id: doc.id,
+      customerId: data?.customerId ?? '',
+      status: data?.status ?? 'pending',
+      isDeleted: data?.isDeleted ?? false,
+      createdAt: toDateSafe(data?.createdAt),
+      updatedAt: toDateSafe(data?.updatedAt),
+      deletedAt: data?.deletedAt?.toDate?.() ?? null,
+      items: (data?.items ?? []) as OrderItem[],
+      totalAmount: data?.totalAmount ?? 0,
+      discount: data?.discount,
+      tax: data?.tax,
+      paymentMethod: data?.paymentMethod,
+      refundAmount: data?.refundAmount,
+      paymentId: data?.paymentId,
+      createdBy: data?.createdBy,
+    });
   }
 
-  static validateUpdate(status: string): boolean {
-    return ['pending', 'completed', 'cancelled'].includes(status);
-  }
-
-  static transformToFirestore(dto: OrderDTO) {
+  static toFirestore(dto: OrderDTO): Order {
     return {
-      customerId: dto.customerId.trim(),
+      id: dto.id ?? '',
+      customerId: dto.customerId,
       status: dto.status,
       isDeleted: dto.isDeleted,
-      createdAt: dto.createdAt,
-      updatedAt: dto.updatedAt,
-      deletedAt: dto.deletedAt,
-      items: dto.items.map(item => ({
-        productId: item.productId.trim(),
-        productName: typeof item.productName === 'string' ? item.productName.trim() : undefined,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        discount: item.discount,
-        tax: item.tax,
-      })),
+      createdAt: dto.createdAt as any,
+      updatedAt: dto.updatedAt as any,
+      deletedAt: dto.deletedAt as any,
+      items: dto.items,
       totalAmount: dto.totalAmount,
       discount: dto.discount,
       tax: dto.tax,
@@ -149,35 +86,34 @@ class OrderDTO {
     };
   }
 
-  static transformFromFirestore(
-    doc: DocumentSnapshot
-  ): OrderDTO {
-    const data = doc.data();
+  /**
+   * Static validation method for creating an order.
+   */
+  static validate(order: OrderDTO): string[] {
+    const errors: string[] = [];
 
-    return new OrderDTO(
-      data?.customerId ?? '',
-      (data?.items ?? []).map((item: any) => ({
-        productId: item.productId,
-        productName: item.productName,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        discount: item.discount,
-        tax: item.tax,
-      })),
-      data?.totalAmount ?? 0,
-      data?.status ?? 'pending',
-      data?.isDeleted ?? false,
-      data?.createdAt?.toDate?.() ?? new Date(),
-      data?.updatedAt?.toDate?.() ?? new Date(),
-      data?.deletedAt?.toDate?.() ?? null,
-      data?.discount,
-      data?.tax,
-      data?.paymentMethod,
-      data?.refundAmount,
-      data?.paymentId,
-      data?.createdBy,
-      doc.id
-    );
+    if (!order.customerId || typeof order.customerId !== 'string') {
+      errors.push('customerId is required and must be a string');
+    }
+
+    if (!Array.isArray(order.items) || order.items.length === 0) {
+      errors.push('items must be a non-empty array');
+    }
+
+    if (typeof order.totalAmount !== 'number' || order.totalAmount < 0) {
+      errors.push('totalAmount must be a positive number');
+    }
+
+    if (order.status && !this.validateUpdate(order.status)) {
+      errors.push(`Invalid status: ${order.status}`);
+    }
+
+    return errors;
+  }
+
+  static validateUpdate(status: string): boolean {
+    const validStatuses: OrderStatus[] = ['pending', 'paid', 'shipped', 'cancelled'];
+    return validStatuses.includes(status as OrderStatus);
   }
 }
 

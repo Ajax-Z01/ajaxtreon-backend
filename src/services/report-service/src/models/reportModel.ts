@@ -98,18 +98,18 @@ const getStockReport = async (startDate: string, endDate: string): Promise<any[]
     const stockMap: Map<string, { quantity: number; lastUpdated: Date }> = new Map();
 
     for (const change of changes) {
-      const multiplier = change.change_type === 'add' ? 1 : -1;
-      const current = stockMap.get(change.product_id);
+      const multiplier = change.changeType === 'add' ? 1 : -1;
+      const current = stockMap.get(change.productId);
 
       if (current) {
         current.quantity += multiplier * change.quantity;
-        if (change.timestamp > current.lastUpdated) {
-          current.lastUpdated = change.timestamp;
+        if (change.timestamp.toDate() > current.lastUpdated) {
+          current.lastUpdated = change.timestamp.toDate();
         }
       } else {
-        stockMap.set(change.product_id, {
+        stockMap.set(change.productId, {
           quantity: multiplier * change.quantity,
-          lastUpdated: change.timestamp,
+          lastUpdated: change.timestamp.toDate(),
         });
       }
     }
@@ -164,7 +164,7 @@ const getStockChangeHistory = async (startDate: string, endDate: string): Promis
     const changes: StockChange[] = snapshot.docs.map(doc => ({
       id: doc.id,
       ...(doc.data() as StockChange),
-      timestamp: (doc.data().timestamp as admin.firestore.Timestamp).toDate(),
+      timestamp: doc.data().timestamp as admin.firestore.Timestamp,
     }));
 
     return changes;

@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import { createUser, getAllUsers, getUserById, updateUser, deleteUser, setUserRoleInDb } from '../models/userModel';
+import userModel from '../models/userModel';
 
 // Create new user
 const createUserController = async (req: Request, res: Response): Promise<void> => {
-  const { email, password, name, role } = req.body;
+  const { email, password, name, role, phone, address } = req.body;
   
   if (!email || !password || !name || !role) {
     res.status(400).json({ message: 'All fields are required' });
@@ -11,7 +11,7 @@ const createUserController = async (req: Request, res: Response): Promise<void> 
   }
 
   try {
-    const user = await createUser(email, password, name, role);
+    const user = await userModel.createUser(email, password, name, role, phone, address);
     res.status(201).json({ message: 'User registered successfully', uid: user.uid });
   } catch (error: unknown) {
     res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
@@ -21,7 +21,7 @@ const createUserController = async (req: Request, res: Response): Promise<void> 
 // Get all users (Admin only)
 const getAllUsersController = async (req: Request, res: Response): Promise<void> => {
   try {
-    const users = await getAllUsers();
+    const users = await userModel.getAllUsers();
     res.json(users);
   } catch (error: unknown) {
     res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
@@ -33,7 +33,7 @@ const getUser = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   try {
-    const user = await getUserById(id);
+    const user = await userModel.getUserById(id);
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
@@ -50,7 +50,7 @@ const updateUserInfo = async (req: Request, res: Response): Promise<void> => {
   const { name, email, role } = req.body;
 
   try {
-    const updatedUser = await updateUser(id, { name, email, role });
+    const updatedUser = await userModel.updateUser(id, { name, email, role });
     res.json({ message: 'User updated successfully', user: updatedUser });
   } catch (error: unknown) {
     res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
@@ -62,7 +62,7 @@ const deleteUserInfo = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
   try {
-    await deleteUser(id);
+    await userModel.deleteUser(id);
     res.json({ message: 'User deleted successfully' });
   } catch (error: unknown) {
     res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
@@ -80,7 +80,7 @@ const setUserRole = async (req: Request, res: Response): Promise<void> => {
   }
 
   try {
-    await setUserRoleInDb(id, role);
+    await userModel.setUserRoleInDb(id, role);
     res.json({ message: `Custom claim '${role}' applied to UID: ${id}` });
   } catch (error: unknown) {
     res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });

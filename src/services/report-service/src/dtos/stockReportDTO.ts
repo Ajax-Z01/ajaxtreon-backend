@@ -1,3 +1,5 @@
+import { Stock } from '../types/stock';
+
 class StockReportDTO {
   productId: string;
   productName: string;
@@ -17,6 +19,16 @@ class StockReportDTO {
     this.currentStock = currentStock;
     this.lastUpdated = lastUpdated;
     this.category = category;
+  }
+
+  static fromStock(stock: Stock): StockReportDTO {
+    return new StockReportDTO(
+      stock.productId,
+      stock.productName,
+      stock.currentStock,
+      stock.updatedAt,
+      stock.category
+    );
   }
 
   static fromFirestore(docData: any): StockReportDTO {
