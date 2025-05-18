@@ -86,10 +86,64 @@ const getRevenueReport = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+const getCustomerReport = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (typeof startDate !== 'string' || typeof endDate !== 'string') {
+      res.status(400).json({ message: 'Invalid query parameters' });
+      return;
+    }
+
+    const report = await reportService.generateCustomerReport(startDate, endDate);
+    res.status(200).json(report);
+  } catch (error) {
+    console.error('Error generating customer report:', error);
+    res.status(500).json({ message: 'Error generating customer report', error: (error as Error).message });
+  }
+};
+
+const getSupplierReport = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (typeof startDate !== 'string' || typeof endDate !== 'string') {
+      res.status(400).json({ message: 'Invalid query parameters' });
+      return;
+    }
+
+    const report = await reportService.generateSupplierReport(startDate, endDate);
+    res.status(200).json(report);
+  } catch (error) {
+    console.error('Error generating supplier report:', error);
+    res.status(500).json({ message: 'Error generating supplier report', error: (error as Error).message });
+  }
+};
+
+const getInventoryTurnoverReport = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (typeof startDate !== 'string' || typeof endDate !== 'string') {
+      res.status(400).json({ message: 'Invalid query parameters' });
+      return;
+    }
+
+    const report = await reportService.generateInventoryTurnoverReport(startDate, endDate);
+    res.status(200).json(report);
+  } catch (error) {
+    console.error('Error generating inventory turnover report:', error);
+    res.status(500).json({ message: 'Error generating inventory turnover report', error: (error as Error).message });
+  }
+};
+
 export default {
   getSalesReport,
   getPurchaseReport,
   getStockReport,
   getStockHistory,
-  getRevenueReport
+  getRevenueReport,
+  getCustomerReport,
+  getSupplierReport,
+  getInventoryTurnoverReport
 };

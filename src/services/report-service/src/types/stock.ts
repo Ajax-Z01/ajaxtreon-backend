@@ -1,4 +1,5 @@
 import { Timestamp } from 'firebase-admin/firestore';
+
 export type ChangeType = 'add' | 'subtract';
 
 export interface StockChange {

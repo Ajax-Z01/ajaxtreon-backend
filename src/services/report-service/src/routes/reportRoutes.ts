@@ -13,4 +13,10 @@ router.get('/stock-history', reportController.getStockHistory);
 
 router.get('/revenue', reportController.getRevenueReport);
 
+router.get('/customers', reportController.getCustomerReport);
+
+router.get('/suppliers', reportController.getSupplierReport);
+
+router.get('/inventory-turnover', reportController.getInventoryTurnoverReport);
+
 export default router;

@@ -1,8 +1,16 @@
-import reportModel from '../models/reportModel';
+import {
+  customerReport,
+  inventoryTurnover,
+  purchaseReport,
+  revenueReport,
+  salesReport,
+  stockReport,
+  supplierReport
+} from "../models";
 
 const generateSalesReport = async (startDate: string, endDate: string): Promise<any> => {
   try {
-    const salesData = await reportModel.getSalesData(startDate, endDate);
+    const salesData = await salesReport.getSalesData(startDate, endDate);
     return salesData;
   } catch (error) {
     console.error('Error in reportService:', error);
@@ -12,7 +20,7 @@ const generateSalesReport = async (startDate: string, endDate: string): Promise<
 
 const generatePurchaseReport = async (startDate: string, endDate: string): Promise<any> => {
   try {
-    const purchaseData = await reportModel.getPurchaseData(startDate, endDate);
+    const purchaseData = await purchaseReport.getPurchaseData(startDate, endDate);
     return purchaseData;
   } catch (error) {
     console.error('Error in reportService:', error);
@@ -22,7 +30,7 @@ const generatePurchaseReport = async (startDate: string, endDate: string): Promi
 
 const generateStockReport = async (startDate: string, endDate: string): Promise<any> => {
   try {
-    const stockData = await reportModel.getStockReport(startDate, endDate);
+    const stockData = await stockReport.getStockReport(startDate, endDate);
     return stockData;
   } catch (error) {
     console.error('Error in reportService:', error);
@@ -32,7 +40,7 @@ const generateStockReport = async (startDate: string, endDate: string): Promise<
 
 const generateStockHistory = async (startDate: string, endDate: string): Promise<any> => {
   try {
-    const stockHistory = await reportModel.getStockChangeHistory(startDate, endDate);
+    const stockHistory = await stockReport.getStockChangeHistory(startDate, endDate);
     return stockHistory;
   } catch (error) {
     console.error('Error in reportService:', error);
@@ -42,11 +50,41 @@ const generateStockHistory = async (startDate: string, endDate: string): Promise
 
 const generateRevenueReport = async (startDate: string, endDate: string): Promise<any> => {
   try {
-    const data = await reportModel.getRevenueReport(startDate, endDate);
+    const data = await revenueReport.getRevenueReport(startDate, endDate);
     return data;
   } catch (error) {
     console.error('Error in generating revenue report:', error);
     throw new Error('Error in generating revenue report');
+  }
+};
+
+const generateCustomerReport = async (startDate: string, endDate: string): Promise<any> => {
+  try {
+    const data = await customerReport.getCustomerReport(startDate, endDate);
+    return data;
+  } catch (error) {
+    console.error('Error in generating customer report:', error);
+    throw new Error('Error in generating customer report');
+  }
+};
+
+const generateSupplierReport = async (startDate: string, endDate: string): Promise<any> => {
+  try {
+    const data = await supplierReport.getSupplierReport(startDate, endDate);
+    return data;
+  } catch (error) {
+    console.error('Error in generating supplier report:', error);
+    throw new Error('Error in generating supplier report');
+  }
+};
+
+const generateInventoryTurnoverReport = async (startDate: string, endDate: string): Promise<any> => {
+  try {
+    const data = await inventoryTurnover.getInventoryTurnoverReport(startDate, endDate);
+    return data;
+  } catch (error) {
+    console.error('Error in generating inventory turnover report:', error);
+    throw new Error('Error in generating inventory turnover report');
   }
 };
 
@@ -56,4 +94,7 @@ export default {
   generateStockReport,
   generateStockHistory,
   generateRevenueReport,
+  generateCustomerReport,
+  generateSupplierReport,
+  generateInventoryTurnoverReport
 };

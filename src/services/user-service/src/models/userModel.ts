@@ -1,13 +1,13 @@
 import admin from '@shared/firebaseAdmin';
 import { UserDTO } from '../dtos/userDTO';
-import { UserData, UpdateUserData } from '../types/user';
+import { UserData, UpdateUserData, UserRole } from '../types/user';
 
 // Create user in Firebase Authentication and Firestore
 const createUser = async (
   email: string, 
   password: string, 
   name: string, 
-  role: 'admin' | 'user' | 'staff' | 'manager', 
+  role: UserRole, 
   phone?: string, 
   address?: string
 ) => {
@@ -114,7 +114,7 @@ const deleteUser = async (id: string): Promise<void> => {
 };
 
 // Set the role of a user
-const setUserRoleInDb = async (id: string, role: 'admin' | 'user' | 'staff' | 'manager'): Promise<void> => {
+const setUserRoleInDb = async (id: string, role: UserRole): Promise<void> => {
   try {
     await admin.auth().setCustomUserClaims(id, { role });
     await admin.firestore().collection('users').doc(id).update({ role });

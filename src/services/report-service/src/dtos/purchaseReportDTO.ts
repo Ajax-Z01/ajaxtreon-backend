@@ -1,5 +1,5 @@
 import { Timestamp } from 'firebase-admin/firestore';
-import { PurchaseStatus } from '../types/purchase';
+import { Purchase, PurchaseStatus } from '../types/purchase';
 
 class PurchaseReportDTO {
   supplierId: string;
@@ -31,7 +31,7 @@ class PurchaseReportDTO {
     this.isDeleted = isDeleted;
   }
 
-  static fromFirestore(purchaseData: any): PurchaseReportDTO {
+  static fromFirestore(purchaseData: Purchase): PurchaseReportDTO {
     const toDateSafe = (value: Date | Timestamp | null | undefined): Date | null => {
       if (!value) return null;
       return value instanceof Timestamp ? value.toDate() : new Date(value);

@@ -1,4 +1,4 @@
-import { UserData } from '../types/user';
+import { UserData, UserRole } from '../types/user';
 
 class UserDTO {
   id: string;
@@ -6,7 +6,7 @@ class UserDTO {
   name: string;
   phone?: string;
   address?: string;
-  role: 'admin' | 'user' | 'staff' | 'manager';
+  role: UserRole;
   isActive: boolean;
   profilePictureUrl?: string;
   createdAt: Date;
@@ -17,7 +17,7 @@ class UserDTO {
     id: string,
     email: string,
     name: string,
-    role: 'admin' | 'user' | 'staff' | 'manager',
+    role: UserRole,
     isActive: boolean,
     createdAt: Date,
     phone?: string,
