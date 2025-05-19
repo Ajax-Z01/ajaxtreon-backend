@@ -12,6 +12,8 @@ import paymentService from './services/payment-service/src';
 import purchaseService from './services/purchase-service/src';
 import orderService from './services/order-service/src';
 import reportService from 'services/report-service/src';
+import supplierService from 'services/supplier-service/src';
+import customerService from 'services/customer-service/src';
 
 dotenv.config();
 
@@ -35,6 +37,8 @@ app.use('/payment', paymentService);
 app.use('/purchase', purchaseService);
 app.use('/order', orderService);
 app.use('/report', reportService);
+app.use('/supplier', supplierService);
+app.use('/customer', customerService);
 
 // Error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
