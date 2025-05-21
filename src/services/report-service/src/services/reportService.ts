@@ -5,6 +5,7 @@ import {
   revenueReport,
   salesReport,
   stockReport,
+  stockHistory,
   supplierReport
 } from "../models";
 
@@ -40,8 +41,8 @@ const generateStockReport = async (startDate: string, endDate: string): Promise<
 
 const generateStockHistory = async (startDate: string, endDate: string): Promise<any> => {
   try {
-    const stockHistory = await stockReport.getStockChangeHistory(startDate, endDate);
-    return stockHistory;
+    const stockHistoryData = await stockHistory.getStockChangeHistory(startDate, endDate);
+    return stockHistoryData;
   } catch (error) {
     console.error('Error in reportService:', error);
     throw new Error('Error in generating stock history report');

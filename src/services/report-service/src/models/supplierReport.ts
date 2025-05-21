@@ -1,27 +1,27 @@
 import { toTimestampRange } from './utils';
 import admin from 'firebase-admin';
 import { SupplierReportDTO } from '../dtos/supplierReportDTO';
-import { UserData } from '../types/user';
 import { Purchase } from '../types/purchase';
+import { Supplier } from '../types/supplier';
 
 const db = admin.firestore();
 
-export const getSupplierReport = async (startDate: string, endDate: string): Promise<SupplierReportDTO[]> => {
+export const getSupplierReport = async (
+  startDate: string,
+  endDate: string
+): Promise<SupplierReportDTO[]> => {
   const { startTimestamp, endTimestamp } = toTimestampRange(startDate, endDate);
 
   try {
-    const usersSnapshot = await db.collection('users')
-      // .where('role', '==', 'supplier') // Uncomment if needed
-      .where('isActive', '==', true)
-      .get();
+    const suppliersSnapshot = await db.collection('suppliers').get();
 
-    if (usersSnapshot.empty) {
-      console.log('No active suppliers found');
+    if (suppliersSnapshot.empty) {
+      console.log('No suppliers found');
       return [];
     }
-
-    const suppliers: UserData[] = usersSnapshot.docs.map(doc => {
-      const data = doc.data() as UserData;
+    
+    const suppliers: Supplier[] = suppliersSnapshot.docs.map(doc => {
+      const data = doc.data() as Supplier;
       const { id, ...rest } = data;
       return { id: doc.id, ...rest };
     });

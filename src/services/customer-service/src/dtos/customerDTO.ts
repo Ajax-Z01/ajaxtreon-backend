@@ -10,14 +10,14 @@ class CustomerDTO {
   contactPersons?: ContactPerson[];
   loyaltyMemberId?: string;
   notes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 
   constructor(
     id: string,
     name: string,
-    createdAt: Date,
-    updatedAt: Date,
+    createdAt: Date | null,
+    updatedAt: Date | null,
     email?: string,
     phone?: string,
     address?: string,
@@ -39,12 +39,26 @@ class CustomerDTO {
     this.updatedAt = updatedAt;
   }
 
-  static fromFirestore(id: string, data: Customer): CustomerDTO {
+  static fromFirestore(id: string, data: Partial<Customer>): CustomerDTO {
+    const createdAt =
+      data.createdAt instanceof Date
+        ? data.createdAt
+        : data.createdAt && typeof data.createdAt.toDate === 'function'
+          ? data.createdAt.toDate()
+          : null;
+
+    const updatedAt =
+      data.updatedAt instanceof Date
+        ? data.updatedAt
+        : data.updatedAt && typeof data.updatedAt.toDate === 'function'
+          ? data.updatedAt.toDate()
+          : null;
+
     return new CustomerDTO(
       id,
-      data.name,
-      data.createdAt instanceof Date ? data.createdAt : data.createdAt.toDate?.() ?? new Date(),
-      data.updatedAt instanceof Date ? data.updatedAt : data.updatedAt.toDate?.() ?? new Date(),
+      data.name ?? '',
+      createdAt,
+      updatedAt,
       data.email,
       data.phone,
       data.address,
@@ -66,8 +80,8 @@ class CustomerDTO {
       contactPersons: this.contactPersons,
       loyaltyMemberId: this.loyaltyMemberId,
       notes: this.notes,
-      createdAt: this.createdAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString(),
+      createdAt: this.createdAt ? this.createdAt.toISOString() : null,
+      updatedAt: this.updatedAt ? this.updatedAt.toISOString() : null,
     };
   }
 }

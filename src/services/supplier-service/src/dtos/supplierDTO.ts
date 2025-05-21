@@ -11,14 +11,14 @@ class SupplierDTO {
   taxId?: string;
   paymentTerm?: string;
   productsSupplied?: string[];
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 
   constructor(
     id: string,
     name: string,
-    createdAt: Date,
-    updatedAt: Date,
+    createdAt: Date | null,
+    updatedAt: Date | null,
     email?: string,
     phone?: string,
     address?: string,
@@ -42,12 +42,26 @@ class SupplierDTO {
     this.updatedAt = updatedAt;
   }
 
-  static fromFirestore(id: string, data: Supplier): SupplierDTO {
+  static fromFirestore(id: string, data: Partial<Supplier>): SupplierDTO {
+    const createdAt =
+      data.createdAt instanceof Date
+        ? data.createdAt
+        : data.createdAt && typeof data.createdAt.toDate === 'function'
+          ? data.createdAt.toDate()
+          : null;
+
+    const updatedAt =
+      data.updatedAt instanceof Date
+        ? data.updatedAt
+        : data.updatedAt && typeof data.updatedAt.toDate === 'function'
+          ? data.updatedAt.toDate()
+          : null;
+
     return new SupplierDTO(
       id,
-      data.name,
-      data.createdAt instanceof Date ? data.createdAt : data.createdAt.toDate?.() ?? new Date(),
-      data.updatedAt instanceof Date ? data.updatedAt : data.updatedAt.toDate?.() ?? new Date(),
+      data.name ?? '',
+      createdAt,
+      updatedAt,
       data.email,
       data.phone,
       data.address,
@@ -71,8 +85,8 @@ class SupplierDTO {
       taxId: this.taxId,
       paymentTerm: this.paymentTerm,
       productsSupplied: this.productsSupplied,
-      createdAt: this.createdAt.toISOString(),
-      updatedAt: this.updatedAt.toISOString()
+      createdAt: this.createdAt ? this.createdAt.toISOString() : null,
+      updatedAt: this.updatedAt ? this.updatedAt.toISOString() : null,
     };
   }
 }

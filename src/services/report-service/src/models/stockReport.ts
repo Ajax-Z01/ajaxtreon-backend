@@ -1,6 +1,5 @@
 import { dbInstance, toTimestampRange } from './utils';
 import { StockReportDTO } from '../dtos/stockReportDTO';
-import { StockChange } from '../types/stock';
 import admin from 'firebase-admin';
 
 const db = dbInstance;
@@ -8,7 +7,7 @@ const db = dbInstance;
 const queryStockChanges = async (
   startTimestamp: admin.firestore.Timestamp,
   endTimestamp: admin.firestore.Timestamp
-): Promise<StockChange[]> => {
+) => {
   const snapshot = await db.collection('stock_changes')
     .where('timestamp', '>=', startTimestamp)
     .where('timestamp', '<=', endTimestamp)
@@ -18,11 +17,16 @@ const queryStockChanges = async (
     return [];
   }
 
-  return snapshot.docs.map(doc => ({
-    id: doc.id,
-    ...(doc.data() as StockChange),
-    timestamp: doc.data().timestamp.toDate ? doc.data().timestamp.toDate() : doc.data().timestamp,
-  }));
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      productId: data.productId,
+      changeType: data.changeType,
+      quantity: data.quantity,
+      timestamp: data.timestamp,
+      note: data.note,
+    };
+  });
 };
 
 export const getStockReport = async (startDate: string, endDate: string): Promise<StockReportDTO[]> => {
@@ -36,7 +40,7 @@ export const getStockReport = async (startDate: string, endDate: string): Promis
     for (const change of changes) {
       const multiplier = change.changeType === 'add' ? 1 : -1;
       const current = stockMap.get(change.productId);
-      const changeDate = change.timestamp instanceof Date ? change.timestamp : change.timestamp.toDate();
+      const changeDate = change.timestamp.toDate ? change.timestamp.toDate() : change.timestamp;
 
       if (current) {
         current.quantity += multiplier * change.quantity;
@@ -52,7 +56,7 @@ export const getStockReport = async (startDate: string, endDate: string): Promis
     }
 
     const productIds = Array.from(stockMap.keys());
-    const productNameMap: Map<string, string> = new Map();
+    const productNameMap = new Map<string, string>();
 
     const productFetches = productIds.map(async (id) => {
       const doc = await db.collection('products').doc(id).get();
@@ -73,34 +77,5 @@ export const getStockReport = async (startDate: string, endDate: string): Promis
   } catch (error) {
     console.error('Error fetching stock report data:', error);
     throw new Error('Error fetching stock report data');
-  }
-};
-
-export const getStockChangeHistory = async (startDate: string, endDate: string): Promise<StockChange[]> => {
-  const { startTimestamp, endTimestamp } = toTimestampRange(startDate, endDate);
-
-  try {
-    const snapshot = await db.collection('stock_changes')
-      .where('timestamp', '>=', startTimestamp)
-      .where('timestamp', '<=', endTimestamp)
-      .get();
-
-    if (snapshot.empty) {
-      console.log('No stock changes found in the given range');
-      return [];
-    }
-
-    const changes: StockChange[] = snapshot.docs.map(doc => {
-      const data = doc.data() as StockChange;
-      return {
-        id: doc.id,
-        ...data,
-      };
-    });
-
-    return changes;
-  } catch (error) {
-    console.error('Error fetching stock change history:', error);
-    throw new Error('Error fetching stock change history');
   }
 };

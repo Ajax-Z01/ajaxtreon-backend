@@ -1,7 +1,7 @@
 import { toTimestampRange } from './utils';
 import admin from 'firebase-admin';
 import { CustomerReportDTO } from '../dtos/customerReportDTO';
-import { UserData } from '../types/user';
+import { Customer } from '../types/customer';
 import { Order } from '../types/order';
 
 const db = admin.firestore();
@@ -10,18 +10,16 @@ export const getCustomerReport = async (startDate: string, endDate: string): Pro
   const { startTimestamp, endTimestamp } = toTimestampRange(startDate, endDate);
 
   try {
-    const usersSnapshot = await db.collection('users')
-      // .where('role', '==', 'customer') // Uncomment if needed
-      .where('isActive', '==', true)
-      .get();
+    // Ambil semua data customer
+    const customerSnapshot = await db.collection('customers').get();
 
-    if (usersSnapshot.empty) {
-      console.log('No active customers found');
+    if (customerSnapshot.empty) {
+      console.log('No customers found');
       return [];
     }
-
-    const customers: UserData[] = usersSnapshot.docs.map(doc => {
-      const data = doc.data() as UserData;
+    
+    const customers: Customer[] = customerSnapshot.docs.map(doc => {
+      const data = doc.data() as Customer;
       const { id, ...rest } = data;
       return { id: doc.id, ...rest };
     });
