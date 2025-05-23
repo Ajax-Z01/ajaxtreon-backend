@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import paymentModel from '../models/paymentModel';
-import { PaymentData, PaymentStatus } from '../types/payment';
+import { PaymentData, PaymentStatus, CreateTransactionPayload } from '../types/payment';
+import * as paymentService from '../services/paymentService';
 
 const getPayments = async (_req: Request, res: Response): Promise<void> => {
   try {
@@ -14,19 +15,37 @@ const getPayments = async (_req: Request, res: Response): Promise<void> => {
 
 const addPayment = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { orderId, amount, method } = req.body;
+    const { orderId, amount, method, customer, items } = req.body;
+
+    const payload: CreateTransactionPayload = {
+      transaction_details: {
+        order_id: orderId,
+        gross_amount: amount,
+      },
+      customer_details: customer,
+      item_details: items,
+    };
+
+    const midtransResult = await paymentService.createTransaction(payload);
 
     const paymentData: Omit<PaymentData, 'id'> = {
       orderId,
       amount,
       method,
       status: 'pending',
+      transactionId: midtransResult.transaction_id || null,
+      fraudStatus: midtransResult.fraud_status || null,
+      paymentType: midtransResult.payment_type || null,
+      vaNumber: midtransResult.va_numbers ? midtransResult.va_numbers[0]?.va_number || null : null,
+      pdfUrl: midtransResult.pdf_url || null,
       createdAt: new Date(),
-      updatedAt: new Date(),
+      updatedAt: null,
+      transactionTime: midtransResult.transaction_time ? new Date(midtransResult.transaction_time) : null,
     };
 
     const paymentId = await paymentModel.createPayment(paymentData);
-    res.status(201).json({ message: 'Payment created', paymentId });
+
+    res.status(201).json({ message: 'Payment created', paymentId, midtransResult });
   } catch (error) {
     console.error('Error creating payment:', error);
     res.status(400).json({ message: (error as Error).message });

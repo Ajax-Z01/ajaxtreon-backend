@@ -6,6 +6,12 @@ class PaymentDTO {
   amount: number;
   status: PaymentStatus;
   method: string | null;
+  transactionTime: Date | null;
+  transactionId: string | null;
+  fraudStatus: 'accept' | 'deny' | 'challenge' | null;
+  paymentType: string | null;
+  vaNumber: string | null;
+  pdfUrl: string | null;
   createdAt: Date;
   updatedAt: Date | null;
 
@@ -14,6 +20,12 @@ class PaymentDTO {
     this.amount = data.amount;
     this.status = data.status ?? 'pending';
     this.method = data.method ?? null;
+    this.transactionTime = data.transactionTime ? convertToDate(data.transactionTime) : null;
+    this.transactionId = data.transactionId ?? null;
+    this.fraudStatus = data.fraudStatus ?? null;
+    this.paymentType = data.paymentType ?? null;
+    this.vaNumber = data.vaNumber ?? null;
+    this.pdfUrl = data.pdfUrl ?? null;
     this.createdAt = convertToDate(data.createdAt);
     this.updatedAt = data.updatedAt ? convertToDate(data.updatedAt) : null;
   }
@@ -29,7 +41,7 @@ class PaymentDTO {
       errors.push('Amount must be a positive number');
     }
 
-    const validStatuses: PaymentStatus[] = ['pending', 'paid', 'failed'];
+    const validStatuses: PaymentStatus[] = ['pending', 'paid', 'failed', 'refunded', 'cancelled', 'expired', 'challenge'];
     if (data.status && !validStatuses.includes(data.status)) {
       errors.push(`Status must be one of: ${validStatuses.join(', ')}`);
     }
@@ -38,11 +50,15 @@ class PaymentDTO {
       errors.push('Payment method must be a string if provided');
     }
 
+    if (data.fraudStatus && !['accept', 'deny', 'challenge', null].includes(data.fraudStatus)) {
+      errors.push('Invalid fraudStatus value');
+    }
+
     return errors;
   }
 
   static validateUpdate(status: any): status is PaymentStatus {
-    const validStatuses: PaymentStatus[] = ['pending', 'paid', 'failed'];
+    const validStatuses: PaymentStatus[] = ['pending', 'paid', 'failed', 'refunded', 'cancelled', 'expired', 'challenge'];
     return validStatuses.includes(status);
   }
 
@@ -52,6 +68,12 @@ class PaymentDTO {
       amount: dto.amount,
       status: dto.status,
       method: dto.method,
+      transactionTime: dto.transactionTime,
+      transactionId: dto.transactionId,
+      fraudStatus: dto.fraudStatus,
+      paymentType: dto.paymentType,
+      vaNumber: dto.vaNumber,
+      pdfUrl: dto.pdfUrl,
       createdAt: dto.createdAt,
       updatedAt: dto.updatedAt,
     };
@@ -67,6 +89,12 @@ class PaymentDTO {
       amount: data.amount,
       status: data.status,
       method: data.method,
+      transactionTime: data.transactionTime ? convertToDate(data.transactionTime) : null,
+      transactionId: data.transactionId ?? null,
+      fraudStatus: data.fraudStatus ?? null,
+      paymentType: data.paymentType ?? null,
+      vaNumber: data.vaNumber ?? null,
+      pdfUrl: data.pdfUrl ?? null,
       createdAt: convertToDate(data.createdAt),
       updatedAt: data.updatedAt ? convertToDate(data.updatedAt) : null,
     };

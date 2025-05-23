@@ -36,8 +36,9 @@ class CustomerReportDTO {
     this.contactPersons = customer.contactPersons;
     this.loyaltyMemberId = customer.loyaltyMemberId;
     this.notes = customer.notes;
-    this.createdAt = customer.createdAt.toDate();
-    this.updatedAt = customer.updatedAt.toDate();
+    
+    this.createdAt = customer.createdAt ? customer.createdAt.toDate() : new Date(0);
+    this.updatedAt = customer.updatedAt ? customer.updatedAt.toDate() : new Date(0);
 
     const completedOrders = orders.filter(o => o.status === 'completed');
     const totalOrders = orders.length;
@@ -53,7 +54,7 @@ class CustomerReportDTO {
       : 0;
 
     this.lastOrderDate = orders
-      .map(o => o.createdAt?.toDate?.())
+      .map(o => o.createdAt && o.createdAt.toDate ? o.createdAt.toDate() : null)
       .filter((d): d is Date => d instanceof Date)
       .sort((a, b) => b.getTime() - a.getTime())[0];
   }

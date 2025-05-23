@@ -17,26 +17,24 @@ const createPayment = async (paymentData: PaymentData): Promise<string> => {
   await paymentRef.set({
     ...PaymentDTO.transformToFirestore(dto),
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    updatedAt: null,
   });
 
   return paymentRef.id;
 };
 
 // READ
-const getAllPayments = async (): Promise<any[]> => {
+const getAllPayments = async (): Promise<(PaymentData & { id: string })[]> => {
   const snapshot = await db.collection('payments').get();
   return snapshot.docs.map(doc =>
     PaymentDTO.transformFromFirestore(doc.data(), doc.id)
   );
 };
 
-const getPaymentById = async (paymentId: string): Promise<any> => {
+const getPaymentById = async (paymentId: string): Promise<PaymentData & { id: string }> => {
   const doc = await db.collection('payments').doc(paymentId).get();
   if (!doc.exists) {
     throw new Error('Payment not found');
   }
-  // Ensure doc.data() is not undefined
   const data = doc.data();
   if (!data) {
     throw new Error('Payment data is undefined');
