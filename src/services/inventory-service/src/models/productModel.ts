@@ -20,6 +20,10 @@ const addProduct = async (productData: Product & { createdBy: string }): Promise
     productData.stock,
     productData.categoryId,
     productData.createdBy,
+    productData.description,
+    productData.imageUrl,
+    productData.sku,
+    productData.isActive ?? true,
     now,
     undefined
   );
@@ -46,12 +50,15 @@ const updateProduct = async (id: string, productData: Partial<Product>): Promise
     productData.stock ?? existingData.stock,
     productData.categoryId ?? existingData.categoryId,
     existingData.createdBy,
+    productData.description ?? existingData.description,
+    productData.imageUrl ?? existingData.imageUrl,
+    productData.sku ?? existingData.sku,
+    productData.isActive ?? existingData.isActive ?? true,
     existingData.createdAt?.toDate ? existingData.createdAt.toDate() : existingData.createdAt,
     updatedAt
   );
 
   const transformedProduct = ProductDTO.transformToFirestore(product);
-
   await docRef.update(transformedProduct);
 };
 

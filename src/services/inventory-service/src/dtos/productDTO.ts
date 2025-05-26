@@ -5,6 +5,10 @@ export default class ProductDTO {
   price: Product['price'];
   stock: Product['stock'];
   categoryId: Product['categoryId'];
+  description?: Product['description'];
+  imageUrl?: Product['imageUrl'];
+  sku?: Product['sku'];
+  isActive?: Product['isActive'];
   createdBy: Product['createdBy'];
   createdAt?: Date;
   updatedAt?: Date;
@@ -15,6 +19,10 @@ export default class ProductDTO {
     stock: Product['stock'],
     categoryId: Product['categoryId'],
     createdBy: Product['createdBy'],
+    description?: Product['description'],
+    imageUrl?: Product['imageUrl'],
+    sku?: Product['sku'],
+    isActive?: Product['isActive'],
     createdAt?: Date,
     updatedAt?: Date
   ) {
@@ -22,6 +30,10 @@ export default class ProductDTO {
     this.price = price;
     this.stock = stock;
     this.categoryId = categoryId;
+    this.description = description;
+    this.imageUrl = imageUrl;
+    this.sku = sku;
+    this.isActive = isActive;
     this.createdBy = createdBy;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
@@ -45,9 +57,13 @@ export default class ProductDTO {
       price: data.price,
       stock: data.stock,
       categoryId: data.categoryId.trim(),
+      description: data.description ?? null,
+      imageUrl: data.imageUrl ?? null,
+      sku: data.sku ?? null,
+      isActive: data.isActive ?? true,
       createdBy: data.createdBy.trim(),
-      createdAt: data.createdAt ? data.createdAt : new Date(),
-      updatedAt: data.updatedAt ? data.updatedAt : null,
+      createdAt: data.createdAt ?? new Date(),
+      updatedAt: data.updatedAt ?? null,
     };
   }
 
@@ -59,6 +75,10 @@ export default class ProductDTO {
       doc.stock,
       doc.categoryId,
       doc.createdBy,
+      doc.description ?? undefined,
+      doc.imageUrl ?? undefined,
+      doc.sku ?? undefined,
+      doc.isActive ?? true,
       doc.createdAt ? new Date(doc.createdAt.seconds * 1000) : undefined,
       doc.updatedAt ? new Date(doc.updatedAt.seconds * 1000) : undefined
     );

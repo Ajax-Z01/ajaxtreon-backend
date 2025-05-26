@@ -6,9 +6,9 @@ class OrderDTO {
   customerId: string;
   status: OrderStatus;
   isDeleted: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date | null;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  deletedAt: Timestamp | null;
   items: OrderItem[];
   totalAmount: number;
   discount?: number;
@@ -19,9 +19,9 @@ class OrderDTO {
   createdBy?: string;
 
   constructor(order: Omit<Order, 'createdAt' | 'updatedAt' | 'deletedAt'> & {
-    createdAt: Date;
-    updatedAt: Date;
-    deletedAt: Date | null;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+    deletedAt: Timestamp | null;
   }) {
     this.id = order.id;
     this.customerId = order.customerId;
@@ -43,18 +43,14 @@ class OrderDTO {
   static fromFirestore(doc: DocumentSnapshot): OrderDTO {
     const data = doc.data();
 
-    const toDateSafe = (val: Timestamp | undefined): Date => {
-      return val?.toDate() ?? new Date();
-    };
-
     return new OrderDTO({
       id: doc.id,
       customerId: data?.customerId ?? '',
       status: data?.status ?? 'pending',
       isDeleted: data?.isDeleted ?? false,
-      createdAt: toDateSafe(data?.createdAt),
-      updatedAt: toDateSafe(data?.updatedAt),
-      deletedAt: data?.deletedAt?.toDate?.() ?? null,
+      createdAt: data?.createdAt ?? Timestamp.now(),
+      updatedAt: data?.updatedAt ?? Timestamp.now(),
+      deletedAt: data?.deletedAt ?? null,
       items: (data?.items ?? []) as OrderItem[],
       totalAmount: data?.totalAmount ?? 0,
       discount: data?.discount,
@@ -72,9 +68,9 @@ class OrderDTO {
       customerId: dto.customerId,
       status: dto.status,
       isDeleted: dto.isDeleted,
-      createdAt: dto.createdAt as any,
-      updatedAt: dto.updatedAt as any,
-      deletedAt: dto.deletedAt as any,
+      createdAt: dto.createdAt,
+      updatedAt: dto.updatedAt,
+      deletedAt: dto.deletedAt,
       items: dto.items,
       totalAmount: dto.totalAmount,
       discount: dto.discount,

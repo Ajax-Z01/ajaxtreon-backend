@@ -18,7 +18,7 @@ export interface Order {
   isDeleted?: boolean;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
-  deletedAt?: Timestamp;
+  deletedAt?: Timestamp | null;
 
   items: OrderItem[];
 

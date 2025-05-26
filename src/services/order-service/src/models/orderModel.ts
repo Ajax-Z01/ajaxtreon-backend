@@ -2,7 +2,7 @@ import admin from '@shared/firebaseAdmin';
 import OrderDTO from '../dtos/orderDTO';
 import { Order } from '../types/order';
 import { StockChange } from '../types/stock';
-import { Payment } from '../types/payment';
+import { PaymentData } from '../types/payment';
 
 const db = admin.firestore();
 const Timestamp = admin.firestore.Timestamp;
@@ -45,7 +45,6 @@ const addOrderWithTransaction = async (rawData: any): Promise<string> => {
     throw new Error('Items must be a non-empty array');
   }
 
-  // Hitung totalAmount
   const totalAmount = rawData.items.reduce((sum: number, item: any) => {
     const unitPrice = item.unitPrice ?? 0;
     const quantity = item.quantity ?? 0;
@@ -56,7 +55,7 @@ const addOrderWithTransaction = async (rawData: any): Promise<string> => {
     return sum + priceWithTax;
   }, 0);
 
-  const now = new Date();
+  const now = Timestamp.now();
 
   const order = new OrderDTO({
     id: '',
@@ -104,7 +103,7 @@ const addOrderWithTransaction = async (rawData: any): Promise<string> => {
         productId: item.productId,
         changeType: 'subtract',
         quantity: item.quantity,
-        timestamp: Timestamp.fromDate(now),
+        timestamp: now,
         note: 'Order placed via transaction',
       };
       t.set(stockLogRef, cleanObject(stockChange));
@@ -112,12 +111,19 @@ const addOrderWithTransaction = async (rawData: any): Promise<string> => {
 
     t.set(orderRef, cleanObject(OrderDTO.toFirestore({ ...order, id: orderRef.id })));
 
-    const payment: Payment = {
+    const payment: PaymentData = {
       orderId: orderRef.id,
       amount: totalAmount,
+      method: rawData.paymentMethod ?? null,
       status: 'pending',
-      method: rawData.paymentMethod ?? undefined,
-      createdAt: Timestamp.fromDate(now),
+      transactionTime: null,
+      transactionId: null,
+      fraudStatus: null,
+      paymentType: null,
+      vaNumber: null,
+      pdfUrl: null,
+      createdAt: now.toDate(),
+      updatedAt: null,
     };
     t.set(paymentRef, cleanObject(payment));
   });
@@ -137,7 +143,7 @@ const updateOrder = async (id: string, status: string): Promise<void> => {
 
   await orderRef.update({
     status,
-    updatedAt: Timestamp.fromDate(new Date()),
+    updatedAt: Timestamp.now(),
   });
 };
 
@@ -149,7 +155,7 @@ const deleteOrder = async (id: string): Promise<void> => {
 
   await orderRef.set({
     isDeleted: true,
-    deletedAt: Timestamp.fromDate(new Date()),
+    deletedAt: Timestamp.now(),
   }, { merge: true });
 };
 
