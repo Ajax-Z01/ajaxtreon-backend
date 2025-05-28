@@ -4,7 +4,6 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import 'module-alias/register';
 
-// Import the services
 import authService from './services/auth-service/src';
 import userService from './services/user-service/src';
 import inventoryService from './services/inventory-service/src';
@@ -20,7 +19,6 @@ dotenv.config();
 const app = express();
 const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5000'];
 
-// Middleware
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
@@ -34,12 +32,10 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan('dev'));
 
-// Routes
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_req: Request, res: Response) => {
   res.send('Ajaxtreon API Gateway is running 🚀');
 });
 
-// Mount the services
 app.use('/auth', authService);
 app.use('/user', userService);
 app.use('/inventory', inventoryService);
@@ -50,8 +46,7 @@ app.use('/report', reportService);
 app.use('/supplier', supplierService);
 app.use('/customer', customerService);
 
-// Error handler
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
   res.status(err.statusCode || 500).json({
     error: err.message || 'Internal Server Error',

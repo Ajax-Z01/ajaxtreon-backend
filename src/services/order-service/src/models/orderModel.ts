@@ -1,100 +1,104 @@
 import admin from '@shared/firebaseAdmin';
 import OrderDTO from '../dtos/orderDTO';
-import { Order } from '../types/order';
+import { Order, OrderStatus, OrderPayload } from '../types/order';
 import { StockChange } from '../types/stock';
-import { PaymentData } from '../types/payment';
+import { calculateOrderSummary } from '../utils/order';
+import { mapItemDetailsToOrderItem, buildPaymentItems } from '../utils/itemMappers';
+
+import paymentModel from '../../../payment-service/src/models/paymentModel';
+import * as paymentService from '../../../payment-service/src/services/paymentService';
+import { PaymentData, CreateTransactionPayload, MidtransTransactionResponse } from '../types/payment';
 
 const db = admin.firestore();
 const Timestamp = admin.firestore.Timestamp;
 
 db.settings({ ignoreUndefinedProperties: true });
 
-// Function to clean undefined values
 function cleanObject(obj: any): any {
   if (Array.isArray(obj)) return obj.map(cleanObject);
-
   if (obj !== null && typeof obj === 'object') {
     if (obj instanceof Timestamp || obj instanceof Date) return obj;
-
     const cleaned: any = {};
     Object.entries(obj).forEach(([key, value]) => {
-      if (value !== undefined) {
-        cleaned[key] = cleanObject(value);
-      }
+      if (value !== undefined) cleaned[key] = cleanObject(value);
     });
     return cleaned;
   }
-
   return obj;
 }
 
-// GET orders
+const checkProductAndStock = async (
+  t: FirebaseFirestore.Transaction,
+  productId: string,
+  quantity: number
+) => {
+  const productRef = db.collection('products').doc(productId);
+  const doc = await t.get(productRef);
+  if (!doc.exists) throw new Error(`E_PRODUCT_NOT_FOUND: ${productId}`);
+
+  const product = doc.data();
+  if (!product || product.stock < quantity) {
+    throw new Error(`E_INSUFFICIENT_STOCK: ${productId}`);
+  }
+
+  return { productRef, product };
+};
+
 const getOrders = async (): Promise<Order[]> => {
   const snapshot = await db.collection('orders').get();
   return snapshot.docs
-    .map(doc => {
-      const dto = OrderDTO.fromFirestore(doc);
-      return OrderDTO.toFirestore(dto);
-    })
+    .map(doc => OrderDTO.toFirestore(OrderDTO.fromFirestore(doc)))
     .filter(order => !order.isDeleted);
 };
 
-// ADD order with transaction
-const addOrderWithTransaction = async (rawData: any): Promise<string> => {
-  if (!rawData.items || !Array.isArray(rawData.items) || rawData.items.length === 0) {
-    throw new Error('Items must be a non-empty array');
+const addOrderWithTransaction = async (
+  payload: OrderPayload
+  ): Promise<{ orderId: string; paymentId: string; midtransResult: MidtransTransactionResponse }> => {
+    if (!payload.items || !Array.isArray(payload.items) || payload.items.length === 0) {
+      throw new Error('E_NO_ITEMS: Items must be a non-empty array');
   }
 
-  const totalAmount = rawData.items.reduce((sum: number, item: any) => {
-    const unitPrice = item.unitPrice ?? 0;
-    const quantity = item.quantity ?? 0;
-    const discount = item.discount ?? 0;
-    const tax = item.tax ?? 0;
-    const priceAfterDiscount = unitPrice * quantity - discount;
-    const priceWithTax = priceAfterDiscount + tax;
-    return sum + priceWithTax;
-  }, 0);
+  const orderItems = mapItemDetailsToOrderItem(payload.items);
+
+  const { total } = calculateOrderSummary(orderItems, {
+    discount: payload.discount,
+    taxPercentage: payload.tax,
+  });
 
   const now = Timestamp.now();
+  const orderRef = db.collection('orders').doc();
 
   const order = new OrderDTO({
-    id: '',
-    customerId: rawData.customerId,
-    status: rawData.status || 'pending',
+    id: orderRef.id,
+    customerId: payload.customerId,
+    status: payload.status || OrderStatus.Pending,
     isDeleted: false,
     createdAt: now,
     updatedAt: now,
     deletedAt: null,
-    items: rawData.items,
-    totalAmount,
-    discount: rawData.discount,
-    tax: rawData.tax,
-    paymentMethod: rawData.paymentMethod,
-    refundAmount: rawData.refundAmount,
-    paymentId: rawData.paymentId,
-    createdBy: rawData.createdBy,
+    items: orderItems,
+    totalAmount: total,
+    discount: payload.discount,
+    tax: payload.tax,
+    paymentMethod: payload.paymentMethod,
+    refundAmount: payload.refundAmount,
+    paymentId: '',
+    createdBy: payload.createdBy,
   });
 
   const validationErrors = OrderDTO.validate(order);
   if (validationErrors.length > 0) {
-    throw new Error('Invalid order data: ' + validationErrors.join(', '));
+    throw new Error('E_ORDER_INVALID: ' + validationErrors.join(', '));
   }
 
-  const orderRef = db.collection('orders').doc();
-  const paymentRef = db.collection('payments').doc();
-
   await db.runTransaction(async (t) => {
-    for (const item of order.items) {
-      const productRef = db.collection('products').doc(item.productId);
-      const productDoc = await t.get(productRef);
-      if (!productDoc.exists) throw new Error(`Product not found: ${item.productId}`);
+    const productChecks = await Promise.all(
+      order.items.map(item => checkProductAndStock(t, item.productId, item.quantity))
+    );
 
-      const product = productDoc.data();
-      if (!product) throw new Error(`Product data is undefined for ${item.productId}`);
-
-      if (product.stock < item.quantity) {
-        throw new Error(`Insufficient stock for product ${item.productId}`);
-      }
+    for (let i = 0; i < order.items.length; i++) {
+      const item = order.items[i];
+      const { productRef, product } = productChecks[i];
 
       t.update(productRef, { stock: product.stock - item.quantity });
 
@@ -109,54 +113,77 @@ const addOrderWithTransaction = async (rawData: any): Promise<string> => {
       t.set(stockLogRef, cleanObject(stockChange));
     }
 
-    t.set(orderRef, cleanObject(OrderDTO.toFirestore({ ...order, id: orderRef.id })));
-
-    const payment: PaymentData = {
-      orderId: orderRef.id,
-      amount: totalAmount,
-      method: rawData.paymentMethod ?? null,
-      status: 'pending',
-      transactionTime: null,
-      transactionId: null,
-      fraudStatus: null,
-      paymentType: null,
-      vaNumber: null,
-      pdfUrl: null,
-      createdAt: now.toDate(),
-      updatedAt: null,
-    };
-    t.set(paymentRef, cleanObject(payment));
+    t.set(orderRef, cleanObject(OrderDTO.toFirestore(order)));
   });
+  
+  const paymentItems = buildPaymentItems(payload.items, payload.discount ?? 0, payload.tax ?? 0);
+  
+  const grossAmount = paymentItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  return orderRef.id;
+  const paymentPayload: CreateTransactionPayload = {
+    transaction_details: {
+      order_id: orderRef.id,
+      gross_amount: grossAmount,
+    },
+    customer_details: payload.customer,
+    item_details: paymentItems,
+  };
+
+  const midtransResult = await paymentService.createTransaction(paymentPayload);
+
+  const paymentData: Omit<PaymentData, 'id'> = {
+    orderId: orderRef.id,
+    amount: total,
+    method: payload.paymentMethod ?? null,
+    status: 'pending',
+    transactionId: midtransResult.transaction_id || null,
+    fraudStatus: midtransResult.fraud_status || null,
+    paymentType: midtransResult.payment_type || null,
+    vaNumber: midtransResult.va_numbers?.[0]?.va_number || null,
+    pdfUrl: midtransResult.pdf_url || null,
+    createdAt: new Date(),
+    updatedAt: null,
+    transactionTime: midtransResult.transaction_time ? new Date(midtransResult.transaction_time) : null,
+  };
+
+  const paymentId = await paymentModel.createPayment(paymentData);
+
+  await orderRef.update({ paymentId });
+
+  return {
+    orderId: orderRef.id,
+    paymentId,
+    midtransResult,
+  };
 };
 
-// UPDATE order status
 const updateOrder = async (id: string, status: string): Promise<void> => {
-  if (!OrderDTO.validateUpdate(status)) {
-    throw new Error('Invalid status value');
+  if (!Object.values(OrderStatus).includes(status as OrderStatus)) {
+    throw new Error('E_INVALID_STATUS');
   }
 
   const orderRef = db.collection('orders').doc(id);
   const orderDoc = await orderRef.get();
-  if (!orderDoc.exists) throw new Error('Order not found');
+  if (!orderDoc.exists) throw new Error('E_ORDER_NOT_FOUND');
 
   await orderRef.update({
-    status,
+    status: status as OrderStatus,
     updatedAt: Timestamp.now(),
   });
 };
 
-// DELETE order (soft delete)
 const deleteOrder = async (id: string): Promise<void> => {
   const orderRef = db.collection('orders').doc(id);
   const orderDoc = await orderRef.get();
-  if (!orderDoc.exists) throw new Error('Order not found');
+  if (!orderDoc.exists) throw new Error('E_ORDER_NOT_FOUND');
 
-  await orderRef.set({
-    isDeleted: true,
-    deletedAt: Timestamp.now(),
-  }, { merge: true });
+  await orderRef.set(
+    {
+      isDeleted: true,
+      deletedAt: Timestamp.now(),
+    },
+    { merge: true }
+  );
 };
 
 export default {

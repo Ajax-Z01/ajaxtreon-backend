@@ -1,6 +1,12 @@
 import { Timestamp } from 'firebase-admin/firestore';
+import { ItemDetails, MidtransCustomerDetails } from './payment';
 
-export type OrderStatus = 'pending' | 'completed' | 'cancelled' | 'paid' | 'shipped';
+export enum OrderStatus {
+  Pending = 'pending',
+  Paid = 'paid',
+  Shipped = 'shipped',
+  Cancelled = 'cancelled',
+}
 
 export interface OrderItem {
   productId: string;
@@ -9,6 +15,12 @@ export interface OrderItem {
   unitPrice: number;
   discount?: number;
   tax?: number;
+}
+
+export interface OrderCalculationOptions {
+  discount?: number;
+  discountPercentage?: number;
+  taxPercentage?: number;
 }
 
 export interface Order {
@@ -35,5 +47,17 @@ export interface OrderRequestBody {
   customerId: string;
   productId: string;
   quantity: number;
+  status?: OrderStatus;
+}
+
+export interface OrderPayload {
+  items: ItemDetails[];
+  customerId: string;
+  createdBy: string;
+  customer: MidtransCustomerDetails;
+  paymentMethod?: string;
+  discount?: number;
+  tax?: number;
+  refundAmount?: number;
   status?: OrderStatus;
 }

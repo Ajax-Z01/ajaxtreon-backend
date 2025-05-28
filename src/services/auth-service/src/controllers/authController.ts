@@ -17,10 +17,8 @@ const registerUser = async (req: Request, res: Response): Promise<void> => {
       displayName: name,
     });
 
-    // Set custom claims (role)
     await admin.auth().setCustomUserClaims(userRecord.uid, { role });
 
-    // Optionally store user in Firestore
     await admin.firestore().collection('users').doc(userRecord.uid).set({
       email,
       name,
@@ -38,31 +36,88 @@ const registerUser = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// Get user profile with role from custom claims
-const getUserProfile = async (req: Request, res: Response): Promise<void> => {
+const registerCustomer = async (req: Request, res: Response): Promise<void> => {
+  const { email, password, name } = req.body;
+
+  if (!email || !password || !name) {
+    res.status(400).json({ message: 'All fields are required' });
+    return;
+  }
+
   try {
-    const decoded = req.user;
+    const role = 'customer';
 
-    if (!decoded) {
-      res.status(400).json({ message: 'User not authenticated' });
-      return;
-    }
+    const userRecord = await admin.auth().createUser({
+      email,
+      password,
+      displayName: name,
+    });
 
-    const userRecord = await admin.auth().getUser(decoded.uid);
+    await admin.auth().setCustomUserClaims(userRecord.uid, { role });
 
-    res.json({
-      uid: userRecord.uid,
-      email: userRecord.email,
-      name: userRecord.displayName || '',
-      role: decoded.role || '',
+    await admin.firestore().collection('users').doc(userRecord.uid).set({
+      email,
+      name,
+      role,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    await admin.firestore().collection('customers').add({
+      firebaseUid: userRecord.uid,
+      name,
+      email,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    res.status(201).json({
+      message: 'Customer registered successfully',
+      firebaseUid: userRecord.uid,
     });
   } catch (error: unknown) {
-    if (error instanceof Error) {
-      res.status(500).json({ message: error.message });
-    } else {
-      res.status(500).json({ message: 'An unknown error occurred' });
-    }
+    res.status(500).json({ message: error instanceof Error ? error.message : 'Unknown error occurred' });
   }
 };
 
-export default { registerUser, getUserProfile };
+const registerSupplier = async (req: Request, res: Response): Promise<void> => {
+  const { email, password, name } = req.body;
+
+  if (!email || !password || !name) {
+    res.status(400).json({ message: 'All fields are required' });
+    return;
+  }
+
+  try {
+    const role = 'supplier';
+
+    const userRecord = await admin.auth().createUser({
+      email,
+      password,
+      displayName: name,
+    });
+
+    await admin.auth().setCustomUserClaims(userRecord.uid, { role });
+
+    await admin.firestore().collection('users').doc(userRecord.uid).set({
+      email,
+      name,
+      role,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    await admin.firestore().collection('suppliers').add({
+      firebaseUid: userRecord.uid,
+      name,
+      email,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    res.status(201).json({
+      message: 'Supplier registered successfully',
+      firebaseUid: userRecord.uid,
+    });
+  } catch (error: unknown) {
+    res.status(500).json({ message: error instanceof Error ? error.message : 'Unknown error occurred' });
+  }
+};
+
+export default { registerUser, registerCustomer, registerSupplier };

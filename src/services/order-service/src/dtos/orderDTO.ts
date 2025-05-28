@@ -41,24 +41,24 @@ class OrderDTO {
   }
 
   static fromFirestore(doc: DocumentSnapshot): OrderDTO {
-    const data = doc.data();
+    const data = doc.data() ?? {};
 
     return new OrderDTO({
       id: doc.id,
-      customerId: data?.customerId ?? '',
-      status: data?.status ?? 'pending',
-      isDeleted: data?.isDeleted ?? false,
-      createdAt: data?.createdAt ?? Timestamp.now(),
-      updatedAt: data?.updatedAt ?? Timestamp.now(),
-      deletedAt: data?.deletedAt ?? null,
-      items: (data?.items ?? []) as OrderItem[],
-      totalAmount: data?.totalAmount ?? 0,
-      discount: data?.discount,
-      tax: data?.tax,
-      paymentMethod: data?.paymentMethod,
-      refundAmount: data?.refundAmount,
-      paymentId: data?.paymentId,
-      createdBy: data?.createdBy,
+      customerId: String(data.customerId ?? ''),
+      status: Object.values(OrderStatus).includes(data.status) ? data.status : OrderStatus.Pending,
+      isDeleted: Boolean(data.isDeleted),
+      createdAt: data.createdAt instanceof Timestamp ? data.createdAt : Timestamp.now(),
+      updatedAt: data.updatedAt instanceof Timestamp ? data.updatedAt : Timestamp.now(),
+      deletedAt: data.deletedAt ?? null,
+      items: Array.isArray(data.items) ? data.items as OrderItem[] : [],
+      totalAmount: typeof data.totalAmount === 'number' ? data.totalAmount : 0,
+      discount: data.discount,
+      tax: data.tax,
+      paymentMethod: data.paymentMethod,
+      refundAmount: data.refundAmount,
+      paymentId: data.paymentId,
+      createdBy: data.createdBy,
     });
   }
 
@@ -82,9 +82,6 @@ class OrderDTO {
     };
   }
 
-  /**
-   * Static validation method for creating an order.
-   */
   static validate(order: OrderDTO): string[] {
     const errors: string[] = [];
 
@@ -107,9 +104,8 @@ class OrderDTO {
     return errors;
   }
 
-  static validateUpdate(status: string): boolean {
-    const validStatuses: OrderStatus[] = ['pending', 'paid', 'shipped', 'cancelled'];
-    return validStatuses.includes(status as OrderStatus);
+  static validateUpdate(status: OrderStatus): boolean {
+    return Object.values(OrderStatus).includes(status);
   }
 }
 

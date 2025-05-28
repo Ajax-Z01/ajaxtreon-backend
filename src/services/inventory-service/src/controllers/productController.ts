@@ -12,6 +12,18 @@ const getProducts = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
+// Get product by ID
+const getProductById = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const product = await productModel.getProductById(id);
+    res.json(product);
+  } catch (error: any) {
+    console.error('Error fetching product by ID:', error);
+    res.status(404).json({ message: error.message });
+  }
+};
+
 // Add a new product
 const addProduct = async (req: Request, res: Response): Promise<void> => {
   const errors = validationResult(req);
@@ -77,6 +89,7 @@ const deleteProduct = async (req: Request, res: Response): Promise<void> => {
 
 export default {
   getProducts,
+  getProductById,
   addProduct,
   updateProduct,
   deleteProduct,

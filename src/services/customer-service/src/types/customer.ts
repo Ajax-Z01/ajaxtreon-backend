@@ -9,6 +9,7 @@ export interface ContactPerson {
 
 export interface Customer {
   id: string;
+  firebaseUid: string;
   name: string;
   email?: string;
   phone?: string;

@@ -31,6 +31,16 @@ const getCustomerById = async (req: Request, res: Response) => {
   }
 };
 
+const getCustomerByFirebaseUid = async (req: Request, res: Response) => {
+  try {
+    const uid = req.params.uid;
+    const customer = await customerModel.getCustomerByFirebaseUid(uid);
+    res.status(200).json(customer);
+  } catch (error) {
+    res.status(404).json({ message: (error as Error).message });
+  }
+};
+
 const updateCustomer = async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
@@ -56,6 +66,7 @@ export default {
   createCustomer,
   getAllCustomers,
   getCustomerById,
+  getCustomerByFirebaseUid,
   updateCustomer,
   deleteCustomer,
 };

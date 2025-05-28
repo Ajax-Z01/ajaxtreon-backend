@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import orderModel from '../models/orderModel';
-import { OrderRequestBody } from '../types/order';
+import { OrderPayload } from '../types/order';
 
 const getOrders = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -11,10 +11,14 @@ const getOrders = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-const addOrder = async (req: Request<{}, {}, OrderRequestBody>, res: Response): Promise<void> => {
+const addOrder = async (req: Request<{}, {}, OrderPayload>, res: Response): Promise<void> => {
   try {
-    const orderId = await orderModel.addOrderWithTransaction(req.body);
-    res.status(201).json({ id: orderId });
+    const { orderId, paymentId, midtransResult } = await orderModel.addOrderWithTransaction(req.body);
+    res.status(201).json({
+      orderId,
+      paymentId,
+      paymentInfo: midtransResult,
+    });
   } catch (error: unknown) {
     handleError(error, res, 'Transaction failed');
   }

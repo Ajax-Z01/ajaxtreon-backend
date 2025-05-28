@@ -11,6 +11,18 @@ const getProducts = async (): Promise<Array<{ id: string } & Product>> => {
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as { id: string } & Product));
 };
 
+// Get product by ID
+const getProductById = async (id: string): Promise<{ id: string } & Product> => {
+  const docRef = db.collection('products').doc(id);
+  const docSnapshot = await docRef.get();
+
+  if (!docSnapshot.exists) {
+    throw new Error('Product not found');
+  }
+
+  return { id: docSnapshot.id, ...docSnapshot.data() } as { id: string } & Product;
+};
+
 // Add a new product
 const addProduct = async (productData: Product & { createdBy: string }): Promise<string> => {
   const now = new Date();
@@ -69,6 +81,7 @@ const deleteProduct = async (id: string): Promise<void> => {
 
 export default {
   getProducts,
+  getProductById,
   addProduct,
   updateProduct,
   deleteProduct,

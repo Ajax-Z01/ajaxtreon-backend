@@ -40,3 +40,42 @@ export interface CreateTransactionPayload {
   customer_details?: CustomerDetails;
   item_details?: ItemDetails[];
 }
+
+export interface MidtransTransactionResponse {
+  transaction_id: string;
+  order_id: string;
+  payment_type: string;
+  transaction_time: string;
+  gross_amount: number;
+  va_numbers?: { bank: string; va_number: string }[];
+  fraud_status?: string;
+  pdf_url?: string;
+  redirect_url?: string;
+}
+
+export interface MidtransCustomerDetails {
+  first_name: string;
+  last_name?: string;
+  email: string;
+  phone?: string;
+  billing_address?: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    postal_code?: string;
+    country_code?: string;
+  };
+  shipping_address?: {
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    postal_code?: string;
+    country_code?: string;
+  };
+}

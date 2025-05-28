@@ -11,6 +11,7 @@ const createCustomer = async (
 ): Promise<string> => {
   const dto = new CustomerDTO(
     '',
+    customerData.firebaseUid,
     customerData.name,
     new Date(),
     new Date(),
@@ -39,12 +40,24 @@ const getAllCustomers = async (): Promise<CustomerDTO[]> => {
   return snapshot.docs.map(doc => CustomerDTO.fromFirestore(doc.id, doc.data() as Customer));
 };
 
+// READ by ID
 const getCustomerById = async (id: string): Promise<CustomerDTO> => {
   const doc = await collection.doc(id).get();
   if (!doc.exists) throw new Error('Customer not found');
   const data = doc.data();
   if (!data) throw new Error('Customer data is undefined');
   return CustomerDTO.fromFirestore(doc.id, data as Customer);
+};
+
+const getCustomerByFirebaseUid = async (uid: string): Promise<CustomerDTO> => {
+  const snapshot = await collection.where('firebaseUid', '==', uid).limit(1).get();
+
+  if (snapshot.empty) {
+    throw new Error('Customer not found');
+  }
+
+  const doc = snapshot.docs[0];
+  return CustomerDTO.fromFirestore(doc.id, doc.data() as Customer);
 };
 
 // UPDATE
@@ -69,6 +82,7 @@ export default {
   createCustomer,
   getAllCustomers,
   getCustomerById,
+  getCustomerByFirebaseUid,
   updateCustomer,
   deleteCustomer,
 };

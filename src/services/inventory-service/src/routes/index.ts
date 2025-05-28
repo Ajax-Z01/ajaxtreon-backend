@@ -6,7 +6,7 @@ export default (router: Router): void => {
   const routesPath = __dirname;
 
   fs.readdirSync(routesPath).forEach((file) => {
-    if (!file.endsWith('Routes.ts') && !file.endsWith('Routes.js')) return;
+    if (!file.endsWith('Routes.ts')) return;
 
     const route = require(path.join(routesPath, file)).default;
     const routeName = file.replace(/Routes\.(ts|js)$/, '').toLowerCase();

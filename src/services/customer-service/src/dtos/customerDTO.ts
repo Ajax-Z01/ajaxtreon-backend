@@ -2,6 +2,7 @@ import { Customer, ContactPerson } from '../types/customer';
 
 class CustomerDTO {
   id: string;
+  firebaseUid: string;
   name: string;
   email?: string;
   phone?: string;
@@ -15,6 +16,7 @@ class CustomerDTO {
 
   constructor(
     id: string,
+    firebaseUid: string,
     name: string,
     createdAt: Date | null,
     updatedAt: Date | null,
@@ -27,6 +29,7 @@ class CustomerDTO {
     notes?: string
   ) {
     this.id = id;
+    this.firebaseUid = firebaseUid;
     this.name = name;
     this.email = email;
     this.phone = phone;
@@ -56,6 +59,7 @@ class CustomerDTO {
 
     return new CustomerDTO(
       id,
+      data.firebaseUid ?? '',
       data.name ?? '',
       createdAt,
       updatedAt,
@@ -72,6 +76,7 @@ class CustomerDTO {
   toJSON() {
     return {
       id: this.id,
+      firebaseUid: this.firebaseUid,
       name: this.name,
       email: this.email,
       phone: this.phone,
