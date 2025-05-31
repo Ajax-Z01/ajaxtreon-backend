@@ -15,4 +15,7 @@ router.put('/:id', orderController.updateOrder);
 // Delete order
 router.delete('/:id', orderController.deleteOrder);
 
+// Get orders by customer ID
+router.get('/customer/:customerId', orderController.getOrdersByCustomer);
+
 export default router;

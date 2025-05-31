@@ -42,7 +42,7 @@ const getPaymentById = async (paymentId: string): Promise<PaymentData & { id: st
   return PaymentDTO.transformFromFirestore(data, doc.id);
 };
 
-// UPDATE
+// UPDATE STATUS ONLY
 const updatePaymentStatus = async (
   paymentId: string,
   status: PaymentStatus
@@ -59,6 +59,48 @@ const updatePaymentStatus = async (
   return { message: 'Payment status updated' };
 };
 
+// UPDATE MULTIPLE FIELDS (status, note, paidAt)
+const updatePayment = async (
+  paymentId: string,
+  updateData: Partial<Pick<PaymentData, 'status' | 'note' | 'paidAt'>>
+): Promise<{ message: string }> => {
+  const updates: any = {};
+  
+  if (updateData.status) {
+    if (!PaymentDTO.validateUpdate(updateData.status)) {
+      throw new Error('Invalid status value');
+    }
+    updates.status = updateData.status;
+  }
+
+  if (updateData.note !== undefined) {
+    if (updateData.note !== null && typeof updateData.note !== 'string') {
+      throw new Error('Note must be a string or null');
+    }
+    updates.note = updateData.note;
+  }
+
+  if (updateData.paidAt !== undefined) {
+    if (
+      updateData.paidAt !== null &&
+      !(updateData.paidAt instanceof Date || typeof updateData.paidAt === 'string')
+    ) {
+      throw new Error('paidAt must be a Date, string, or null');
+    }
+    // Convert string to Date if needed
+    updates.paidAt =
+      updateData.paidAt && typeof updateData.paidAt === 'string'
+        ? new Date(updateData.paidAt)
+        : updateData.paidAt;
+  }
+
+  updates.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+
+  await db.collection('payments').doc(paymentId).update(updates);
+
+  return { message: 'Payment updated' };
+};
+
 // DELETE
 const deletePayment = async (paymentId: string): Promise<{ message: string }> => {
   await db.collection('payments').doc(paymentId).delete();
@@ -70,5 +112,6 @@ export default {
   getAllPayments,
   getPaymentById,
   updatePaymentStatus,
+  updatePayment,
   deletePayment,
 };

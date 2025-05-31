@@ -1,6 +1,6 @@
 import admin from '@shared/firebaseAdmin';
 import OrderDTO from '../dtos/orderDTO';
-import { Order, OrderStatus, OrderPayload } from '../types/order';
+import { Order, OrderStatus, OrderPayload, OrderResponse } from '../types/order';
 import { StockChange } from '../types/stock';
 import { calculateOrderSummary } from '../utils/order';
 import { mapItemDetailsToOrderItem, buildPaymentItems } from '../utils/itemMappers';
@@ -27,6 +27,10 @@ function cleanObject(obj: any): any {
   return obj;
 }
 
+const mapTimestamp = (timestamp: FirebaseFirestore.Timestamp | null | undefined) => {
+  return timestamp instanceof admin.firestore.Timestamp ? timestamp.toDate() : null;
+};
+
 const checkProductAndStock = async (
   t: FirebaseFirestore.Transaction,
   productId: string,
@@ -44,19 +48,32 @@ const checkProductAndStock = async (
   return { productRef, product };
 };
 
-const getOrders = async (): Promise<Order[]> => {
+const getOrders = async (): Promise<OrderResponse[]> => {
   const snapshot = await db.collection('orders').get();
+
   return snapshot.docs
-    .map(doc => OrderDTO.toFirestore(OrderDTO.fromFirestore(doc)))
+    .map(doc => {
+      const order = OrderDTO.toFirestore(OrderDTO.fromFirestore(doc));
+      return {
+        ...order,
+        createdAt: mapTimestamp(order.createdAt),
+        updatedAt: mapTimestamp(order.updatedAt),
+        deletedAt: mapTimestamp(order.deletedAt),
+      };
+    })
     .filter(order => !order.isDeleted);
 };
+
 
 const addOrderWithTransaction = async (
   payload: OrderPayload
   ): Promise<{ orderId: string; paymentId: string; midtransResult: MidtransTransactionResponse }> => {
     if (!payload.items || !Array.isArray(payload.items) || payload.items.length === 0) {
       throw new Error('E_NO_ITEMS: Items must be a non-empty array');
+  } if (!payload.customerId) {
+    throw new Error('E_CUSTOMER_ID_MISSING: customerId is required');
   }
+
 
   const orderItems = mapItemDetailsToOrderItem(payload.items);
 
@@ -186,9 +203,29 @@ const deleteOrder = async (id: string): Promise<void> => {
   );
 };
 
+const getOrdersByCustomer = async (customerId: string): Promise<OrderResponse[]> => {
+  const snapshot = await db
+    .collection('orders')
+    .where('customerId', '==', customerId)
+    .where('isDeleted', '==', false)
+    .orderBy('createdAt', 'desc')
+    .get();
+
+  return snapshot.docs.map(doc => {
+    const order = OrderDTO.toFirestore(OrderDTO.fromFirestore(doc));
+    return {
+      ...order,
+      createdAt: mapTimestamp(order.createdAt),
+      updatedAt: mapTimestamp(order.updatedAt),
+      deletedAt: mapTimestamp(order.deletedAt),
+    };
+  });
+};
+
 export default {
   getOrders,
   addOrderWithTransaction,
   updateOrder,
   deleteOrder,
+  getOrdersByCustomer,
 };

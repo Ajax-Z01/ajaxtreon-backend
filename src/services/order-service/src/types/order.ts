@@ -61,3 +61,9 @@ export interface OrderPayload {
   refundAmount?: number;
   status?: OrderStatus;
 }
+
+export interface OrderResponse extends Omit<Order, 'createdAt' | 'updatedAt' | 'deletedAt'> {
+  createdAt: Date | null;
+  updatedAt: Date | null;
+  deletedAt: Date | null;
+}

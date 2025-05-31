@@ -63,9 +63,21 @@ const handleError = (error: unknown, res: Response, message: string): void => {
   }
 };
 
+const getOrdersByCustomer = async (req: Request<{ customerId: string }>, res: Response): Promise<void> => {
+  const { customerId } = req.params;
+
+  try {
+    const orders = await orderModel.getOrdersByCustomer(customerId);
+    res.status(200).json(orders);
+  } catch (error: unknown) {
+    handleError(error, res, 'Error getting customer orders');
+  }
+};
+
 export default {
   getOrders,
   addOrder,
   updateOrder,
   deleteOrder,
+  getOrdersByCustomer,
 };

@@ -4,8 +4,9 @@ import { Timestamp } from 'firebase-admin/firestore';
 class PaymentDTO {
   orderId: string;
   amount: number;
-  status: PaymentStatus;
   method: string | null;
+  status: PaymentStatus;
+  note: string | null;
   transactionTime: Date | null;
   transactionId: string | null;
   fraudStatus: 'accept' | 'deny' | 'challenge' | null;
@@ -14,12 +15,14 @@ class PaymentDTO {
   pdfUrl: string | null;
   createdAt: Date;
   updatedAt: Date | null;
+  paidAt: Date | null;
 
   constructor(data: PaymentData) {
     this.orderId = data.orderId;
     this.amount = data.amount;
-    this.status = data.status ?? 'pending';
     this.method = data.method ?? null;
+    this.status = data.status ?? 'pending';
+    this.note = data.note ?? null;
     this.transactionTime = data.transactionTime ? convertToDate(data.transactionTime) : null;
     this.transactionId = data.transactionId ?? null;
     this.fraudStatus = data.fraudStatus ?? null;
@@ -28,6 +31,7 @@ class PaymentDTO {
     this.pdfUrl = data.pdfUrl ?? null;
     this.createdAt = convertToDate(data.createdAt);
     this.updatedAt = data.updatedAt ? convertToDate(data.updatedAt) : null;
+    this.paidAt = data.paidAt ? convertToDate(data.paidAt) : null;
   }
 
   static validate(data: Partial<PaymentData>): string[] {
@@ -54,6 +58,14 @@ class PaymentDTO {
       errors.push('Invalid fraudStatus value');
     }
 
+    if (data.note && typeof data.note !== 'string') {
+      errors.push('Note must be a string if provided');
+    }
+
+    if (data.paidAt && !(data.paidAt instanceof Date || (typeof data.paidAt === 'string' && !isNaN(Date.parse(data.paidAt))))) {
+      errors.push('paidAt must be a valid Date if provided');
+    }
+
     return errors;
   }
 
@@ -66,8 +78,9 @@ class PaymentDTO {
     return {
       orderId: dto.orderId,
       amount: dto.amount,
-      status: dto.status,
       method: dto.method,
+      status: dto.status,
+      note: dto.note,
       transactionTime: dto.transactionTime,
       transactionId: dto.transactionId,
       fraudStatus: dto.fraudStatus,
@@ -76,6 +89,7 @@ class PaymentDTO {
       pdfUrl: dto.pdfUrl,
       createdAt: dto.createdAt,
       updatedAt: dto.updatedAt,
+      paidAt: dto.paidAt,
     };
   }
 
@@ -87,8 +101,9 @@ class PaymentDTO {
       id,
       orderId: data.orderId,
       amount: data.amount,
+      method: data.method ?? null,
       status: data.status,
-      method: data.method,
+      note: data.note ?? null,
       transactionTime: data.transactionTime ? convertToDate(data.transactionTime) : null,
       transactionId: data.transactionId ?? null,
       fraudStatus: data.fraudStatus ?? null,
@@ -97,16 +112,18 @@ class PaymentDTO {
       pdfUrl: data.pdfUrl ?? null,
       createdAt: convertToDate(data.createdAt),
       updatedAt: data.updatedAt ? convertToDate(data.updatedAt) : null,
+      paidAt: data.paidAt ? convertToDate(data.paidAt) : null,
     };
   }
 }
 
 function convertToDate(
-  value: Date | Timestamp | undefined | null
+  value: Date | Timestamp | string | undefined | null
 ): Date {
   if (!value) return new Date();
   if (value instanceof Date) return value;
   if (isTimestamp(value)) return value.toDate();
+  if (typeof value === 'string') return new Date(value);
   return new Date(value);
 }
 

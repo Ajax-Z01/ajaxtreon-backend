@@ -6,6 +6,7 @@ export interface PaymentData {
   amount: number;
   method: string | null;
   status: PaymentStatus;
+  note?: string | null;
   transactionTime?: Date | null;
   transactionId?: string | null;
   fraudStatus?: 'accept' | 'deny' | 'challenge' | null;
@@ -14,6 +15,7 @@ export interface PaymentData {
   pdfUrl?: string | null;
   createdAt: Date;
   updatedAt: Date | null;
+  paidAt?: Date | null;
 }
 
 export interface TransactionDetails {
