@@ -13,6 +13,7 @@ class PaymentDTO {
   paymentType: string | null;
   vaNumber: string | null;
   pdfUrl: string | null;
+  redirectUrl: string | null;
   createdAt: Date;
   updatedAt: Date | null;
   paidAt: Date | null;
@@ -29,6 +30,7 @@ class PaymentDTO {
     this.paymentType = data.paymentType ?? null;
     this.vaNumber = data.vaNumber ?? null;
     this.pdfUrl = data.pdfUrl ?? null;
+    this.redirectUrl = data.redirectUrl ?? null;
     this.createdAt = convertToDate(data.createdAt);
     this.updatedAt = data.updatedAt ? convertToDate(data.updatedAt) : null;
     this.paidAt = data.paidAt ? convertToDate(data.paidAt) : null;
@@ -66,6 +68,10 @@ class PaymentDTO {
       errors.push('paidAt must be a valid Date if provided');
     }
 
+    if (data.redirectUrl && typeof data.redirectUrl !== 'string') {
+      errors.push('redirectUrl must be a string if provided');
+    }
+
     return errors;
   }
 
@@ -87,6 +93,7 @@ class PaymentDTO {
       paymentType: dto.paymentType,
       vaNumber: dto.vaNumber,
       pdfUrl: dto.pdfUrl,
+      redirectUrl: dto.redirectUrl,
       createdAt: dto.createdAt,
       updatedAt: dto.updatedAt,
       paidAt: dto.paidAt,
@@ -110,6 +117,7 @@ class PaymentDTO {
       paymentType: data.paymentType ?? null,
       vaNumber: data.vaNumber ?? null,
       pdfUrl: data.pdfUrl ?? null,
+      redirectUrl: data.redirectUrl ?? null,
       createdAt: convertToDate(data.createdAt),
       updatedAt: data.updatedAt ? convertToDate(data.updatedAt) : null,
       paidAt: data.paidAt ? convertToDate(data.paidAt) : null,

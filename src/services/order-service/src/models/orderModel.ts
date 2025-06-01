@@ -158,6 +158,7 @@ const addOrderWithTransaction = async (
     paymentType: midtransResult.payment_type || null,
     vaNumber: midtransResult.va_numbers?.[0]?.va_number || null,
     pdfUrl: midtransResult.pdf_url || null,
+    redirectUrl: midtransResult.redirect_url || null,
     createdAt: new Date(),
     updatedAt: null,
     transactionTime: midtransResult.transaction_time ? new Date(midtransResult.transaction_time) : null,

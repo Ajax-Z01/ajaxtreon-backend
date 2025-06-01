@@ -59,13 +59,13 @@ const updatePaymentStatus = async (
   return { message: 'Payment status updated' };
 };
 
-// UPDATE MULTIPLE FIELDS (status, note, paidAt)
+// UPDATE MULTIPLE FIELDS (status, note, paidAt, redirectUrl)
 const updatePayment = async (
   paymentId: string,
-  updateData: Partial<Pick<PaymentData, 'status' | 'note' | 'paidAt'>>
+  updateData: Partial<Pick<PaymentData, 'status' | 'note' | 'paidAt' | 'redirectUrl'>>
 ): Promise<{ message: string }> => {
   const updates: any = {};
-  
+
   if (updateData.status) {
     if (!PaymentDTO.validateUpdate(updateData.status)) {
       throw new Error('Invalid status value');
@@ -87,11 +87,17 @@ const updatePayment = async (
     ) {
       throw new Error('paidAt must be a Date, string, or null');
     }
-    // Convert string to Date if needed
     updates.paidAt =
       updateData.paidAt && typeof updateData.paidAt === 'string'
         ? new Date(updateData.paidAt)
         : updateData.paidAt;
+  }
+
+  if (updateData.redirectUrl !== undefined) {
+    if (updateData.redirectUrl !== null && typeof updateData.redirectUrl !== 'string') {
+      throw new Error('redirectUrl must be a string or null');
+    }
+    updates.redirectUrl = updateData.redirectUrl;
   }
 
   updates.updatedAt = admin.firestore.FieldValue.serverTimestamp();

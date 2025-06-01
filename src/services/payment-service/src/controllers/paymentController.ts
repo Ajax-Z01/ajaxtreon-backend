@@ -38,6 +38,7 @@ const addPayment = async (req: Request, res: Response): Promise<void> => {
       paymentType: midtransResult.payment_type || null,
       vaNumber: midtransResult.va_numbers ? midtransResult.va_numbers[0]?.va_number || null : null,
       pdfUrl: midtransResult.pdf_url || null,
+      redirectUrl: midtransResult.redirect_url || null,
       createdAt: new Date(),
       updatedAt: null,
       transactionTime: midtransResult.transaction_time ? new Date(midtransResult.transaction_time) : null,
@@ -52,7 +53,10 @@ const addPayment = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-const updatePaymentStatus = async (req: Request<{ id: string }, {}, { status: PaymentStatus }>, res: Response): Promise<void> => {
+const updatePaymentStatus = async (
+  req: Request<{ id: string }, {}, { status: PaymentStatus }>,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
     const { status } = req.body;

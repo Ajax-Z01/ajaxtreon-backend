@@ -13,6 +13,7 @@ export interface PaymentData {
   paymentType?: string | null;
   vaNumber?: string | null;
   pdfUrl?: string | null;
+  redirectUrl?: string | null;
   createdAt: Date;
   updatedAt: Date | null;
   paidAt?: Date | null;
