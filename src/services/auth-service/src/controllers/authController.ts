@@ -120,4 +120,46 @@ const registerSupplier = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export default { registerUser, registerCustomer, registerSupplier };
+const registerSeller = async (req: Request, res: Response): Promise<void> => {
+  const { email, password, name } = req.body;
+
+  if (!email || !password || !name) {
+    res.status(400).json({ message: 'All fields are required' });
+    return;
+  }
+
+  try {
+    const role = 'seller';
+
+    const userRecord = await admin.auth().createUser({
+      email,
+      password,
+      displayName: name,
+    });
+
+    await admin.auth().setCustomUserClaims(userRecord.uid, { role });
+
+    await admin.firestore().collection('users').doc(userRecord.uid).set({
+      email,
+      name,
+      role,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    await admin.firestore().collection('sellers').add({
+      firebaseUid: userRecord.uid,
+      name,
+      email,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    res.status(201).json({
+      message: 'Seller registered successfully',
+      firebaseUid: userRecord.uid,
+    });
+  } catch (error: unknown) {
+    res.status(500).json({ message: error instanceof Error ? error.message : 'Unknown error occurred' });
+  }
+};
+
+export default { registerUser, registerCustomer, registerSupplier, registerSeller };

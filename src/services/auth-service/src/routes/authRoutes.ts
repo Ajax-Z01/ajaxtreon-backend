@@ -16,4 +16,7 @@ router.post('/register-customer', authController.registerCustomer);
 // @route POST /api/auth/register-supplier
 router.post('/register-supplier', authController.registerSupplier);
 
+// @route POST /api/auth/register-seller
+router.post('/register-seller', authController.registerSeller);
+
 export default router;
