@@ -7,6 +7,8 @@ const router: Router = express.Router();
 // Create a new user
 router.post(
   '/', 
+  authenticateUser,
+  authorizeAdmin,
   userController.createUserController
 );
 

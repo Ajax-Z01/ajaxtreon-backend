@@ -63,4 +63,21 @@ const authorizeAdmin = (req: Request, res: Response, next: NextFunction): void =
   next();
 };
 
-export { authenticateUser, authorizeRoles, authorizeAdmin };
+// Middleware: Only allow seller users
+const authorizeSeller = (req: Request, res: Response, next: NextFunction): void => {
+  const userRole = res.locals.user?.role;
+
+  if (!userRole) {
+    res.status(403).json({ message: 'Missing role in token' });
+    return;
+  }
+
+  if (userRole !== 'seller') {
+    res.status(403).json({ message: 'Forbidden: Seller access required' });
+    return;
+  }
+
+  next();
+};
+
+export { authenticateUser, authorizeRoles, authorizeAdmin, authorizeSeller };
