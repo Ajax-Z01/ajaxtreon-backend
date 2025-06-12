@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import admin from '@shared/firebaseAdmin';
+import axios from 'axios';
 
 // Register a new user
 const registerUser = async (req: Request, res: Response): Promise<void> => {
@@ -162,4 +163,123 @@ const registerSeller = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-export default { registerUser, registerCustomer, registerSupplier, registerSeller };
+const login = async (req: Request, res: Response): Promise<void> => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    res.status(400).json({ message: 'Email and password are required' });
+    return;
+  }
+
+  try {
+    const firebaseApiKey = process.env.FIREBASE_API_KEY;
+    if (!firebaseApiKey) throw new Error('FIREBASE_API_KEY is missing in env');
+
+    const response = await axios.post(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${firebaseApiKey}`,
+      {
+        email,
+        password,
+        returnSecureToken: true,
+      }
+    );
+
+    const { idToken } = response.data;
+
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+
+    const userDoc = await admin.firestore().collection('users').doc(uid).get();
+    const userData = userDoc.data();
+
+    if (!userData) {
+      res.status(404).json({ message: 'User data not found' });
+      return;
+    }
+
+    res.cookie('auth_token', idToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 60 * 60 * 24 * 7 * 1000,
+      sameSite: 'lax',
+    });
+
+    res.status(200).json({
+      token: idToken,
+      user: {
+        uid,
+        email: userData.email,
+        name: userData.name,
+        role: userData.role,
+      },
+      message: 'Login successful',
+    });
+  } catch (error: any) {
+    console.error('Login error:', error?.response?.data || error.message);
+    const message = error?.response?.data?.error?.message || 'Login failed';
+    res.status(401).json({ message });
+  }
+};
+
+const logout = async (req: Request, res: Response): Promise<void> => {
+  try {
+    res.cookie('auth_token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 0,
+      sameSite: 'lax',
+    });
+
+    res.status(200).json({ message: 'Logout successful' });
+  } catch (error: unknown) {
+    console.error('Logout error:', error);
+    res.status(500).json({ message: 'Logout failed' });
+  }
+};
+
+
+const me = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      res.status(401).json({ message: 'Unauthorized: Missing token' });
+      return;
+    }
+
+    const idToken = authHeader.split(' ')[1];
+
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+
+    if (!decodedToken) {
+      res.status(401).json({ message: 'Unauthorized: Invalid token' });
+      return;
+    }
+
+    const uid = decodedToken.uid;
+    const role = decodedToken.role || null;
+
+    const userDoc = await admin.firestore().collection('users').doc(uid).get();
+
+    if (!userDoc.exists) {
+      res.status(404).json({ message: 'User data not found' });
+      return;
+    }
+
+    const userData = userDoc.data();
+
+    res.status(200).json({
+      user: {
+        uid,
+        email: userData?.email || null,
+        name: userData?.name || null,
+        role,
+      },
+    });
+  } catch (error: unknown) {
+    console.error('Error in /api/auth/me:', error);
+    res.status(401).json({ message: 'Unauthorized' });
+  }
+};
+
+export default { registerUser, registerCustomer, registerSupplier, registerSeller, login, logout, me };

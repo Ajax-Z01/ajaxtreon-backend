@@ -19,4 +19,13 @@ router.post('/register-supplier', authController.registerSupplier);
 // @route POST /api/auth/register-seller
 router.post('/register-seller', authController.registerSeller);
 
+// @route POST /api/auth/login
+router.post('/login', authController.login);
+
+// @route POST /api/auth/logout
+router.post('/logout', authController.logout);
+
+// @route GET /api/auth/me
+router.get('/me', authController.me); 
+
 export default router;
