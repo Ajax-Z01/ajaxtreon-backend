@@ -5,9 +5,15 @@ import type { Product } from '../types/product';
 const firestore = admin.firestore;
 const db = firestore();
 
-// Get all products
-const getProducts = async (): Promise<Array<{ id: string } & Product>> => {
-  const snapshot = await db.collection('products').get();
+// Get all products (optionally filtered by createdBy)
+const getProducts = async (createdBy?: string): Promise<Array<{ id: string } & Product>> => {
+  let query = db.collection('products') as FirebaseFirestore.Query;
+
+  if (createdBy) {
+    query = query.where('createdBy', '==', createdBy);
+  }
+
+  const snapshot = await query.get();
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as { id: string } & Product));
 };
 

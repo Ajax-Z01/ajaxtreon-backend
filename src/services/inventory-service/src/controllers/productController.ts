@@ -5,7 +5,8 @@ import productModel from '../models/productModel';
 // Get all products
 const getProducts = async (req: Request, res: Response): Promise<void> => {
   try {
-    const products = await productModel.getProducts();
+    const { createdBy } = req.query;
+    const products = await productModel.getProducts(createdBy as string | undefined);
     res.json(products);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
