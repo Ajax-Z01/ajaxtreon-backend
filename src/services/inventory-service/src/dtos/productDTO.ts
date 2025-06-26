@@ -3,6 +3,7 @@ import type { Product } from '../types/product';
 export default class ProductDTO {
   name: Product['name'];
   price: Product['price'];
+  costPrice?: Product['costPrice'];
   stock: Product['stock'];
   categoryId: Product['categoryId'];
   description?: Product['description'];
@@ -19,6 +20,7 @@ export default class ProductDTO {
     stock: Product['stock'],
     categoryId: Product['categoryId'],
     createdBy: Product['createdBy'],
+    costPrice?: Product['costPrice'],
     description?: Product['description'],
     imageUrl?: Product['imageUrl'],
     sku?: Product['sku'],
@@ -28,6 +30,7 @@ export default class ProductDTO {
   ) {
     this.name = name;
     this.price = price;
+    this.costPrice = costPrice;
     this.stock = stock;
     this.categoryId = categoryId;
     this.description = description;
@@ -39,22 +42,22 @@ export default class ProductDTO {
     this.updatedAt = updatedAt;
   }
 
-  // Validate product data
   static validate(data: Partial<ProductDTO>): boolean {
     return (
       typeof data.name === 'string' && data.name.trim() !== '' &&
       typeof data.price === 'number' && data.price >= 0 &&
+      (data.costPrice === undefined || (typeof data.costPrice === 'number' && data.costPrice >= 0)) &&
       typeof data.stock === 'number' && data.stock >= 0 &&
       typeof data.categoryId === 'string' && data.categoryId.trim() !== '' &&
       typeof data.createdBy === 'string' && data.createdBy.trim() !== ''
     );
   }
 
-  // Transform data to Firestore format
   static transformToFirestore(data: ProductDTO): Record<string, any> {
     return {
       name: data.name.trim(),
       price: data.price,
+      costPrice: data.costPrice ?? null,
       stock: data.stock,
       categoryId: data.categoryId.trim(),
       description: data.description ?? null,
@@ -67,7 +70,6 @@ export default class ProductDTO {
     };
   }
 
-  // Transform data from Firestore to DTO format
   static transformFromFirestore(doc: any): ProductDTO {
     return new ProductDTO(
       doc.name,
@@ -75,6 +77,7 @@ export default class ProductDTO {
       doc.stock,
       doc.categoryId,
       doc.createdBy,
+      doc.costPrice ?? undefined,
       doc.description ?? undefined,
       doc.imageUrl ?? undefined,
       doc.sku ?? undefined,
