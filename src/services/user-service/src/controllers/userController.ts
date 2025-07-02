@@ -47,10 +47,20 @@ const getUser = async (req: Request, res: Response): Promise<void> => {
 // Update user information
 const updateUserInfo = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-  const { name, email, role } = req.body;
+  const updateFields = req.body;
+
+  const allowedFields = ['name', 'email', 'phone', 'address', 'role', 'isActive', 'profilePictureUrl'];
+  const filteredFields = Object.fromEntries(
+    Object.entries(updateFields).filter(([key]) => allowedFields.includes(key))
+  );
+
+  if (typeof filteredFields.role === 'string' && !['admin', 'user', 'staff', 'manager', 'customer', 'supplier', 'seller'].includes(filteredFields.role)) {
+    res.status(400).json({ message: 'Invalid role' });
+    return;
+  }
 
   try {
-    const updatedUser = await userModel.updateUser(id, { name, email, role });
+    const updatedUser = await userModel.updateUser(id, filteredFields);
     res.json({ message: 'User updated successfully', user: updatedUser });
   } catch (error: unknown) {
     res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
@@ -74,7 +84,7 @@ const setUserRole = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { role } = req.body;
 
-  if (!role || (role !== 'admin' && role !== 'user')) {
+  if (!role) {
     res.status(400).json({ message: 'Invalid role provided' });
     return;
   }

@@ -228,6 +228,7 @@ const logout = async (req: Request, res: Response): Promise<void> => {
       secure: process.env.NODE_ENV === 'production',
       maxAge: 0,
       sameSite: 'lax',
+      path: '/',
     });
 
     res.status(200).json({ message: 'Logout successful' });
