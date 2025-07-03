@@ -15,6 +15,7 @@ import reportService from 'services/report-service/src';
 import supplierService from 'services/supplier-service/src';
 import customerService from 'services/customer-service/src';
 import sellerService from 'services/seller-service/src';
+import notificationService from 'services/notification-service/src';
 
 dotenv.config();
 
@@ -50,6 +51,7 @@ app.use('/report', reportService);
 app.use('/supplier', supplierService);
 app.use('/customer', customerService);
 app.use('/seller', sellerService);
+app.use('/notification', notificationService);
 
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
