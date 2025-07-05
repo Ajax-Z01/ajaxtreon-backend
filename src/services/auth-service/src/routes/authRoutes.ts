@@ -1,11 +1,8 @@
 import express, { Router } from 'express';
 import authController from '../controllers/authController';
+import { authenticateUser } from '@shared/middlewares/authMiddleware'
 
 const router: Router = express.Router();
-
-router.get('/test', (req, res) => {
-  res.status(200).json({ message: 'Auth service is running' });
-});
 
 // @route POST /api/auth/register
 router.post('/register', authController.registerUser);
@@ -24,6 +21,9 @@ router.post('/login', authController.login);
 
 // @route POST /api/auth/logout
 router.post('/logout', authController.logout);
+
+// Middleware to authenticate user for protected routes
+router.use(authenticateUser);
 
 // @route GET /api/auth/me
 router.get('/me', authController.me); 

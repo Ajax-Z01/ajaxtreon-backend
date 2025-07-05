@@ -20,7 +20,7 @@ const authenticateUser = async (req: Request, res: Response, next: NextFunction)
       uid: decodedToken.uid,
       email: decodedToken.email ?? '',
       role: decodedToken.role ?? 'user',
-    };
+    };  
 
     next();
   } catch (error: unknown) {

@@ -238,29 +238,16 @@ const logout = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-
 const me = async (req: Request, res: Response): Promise<void> => {
   try {
-    const authHeader = req.headers.authorization;
+    const user = res.locals.user;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({ message: 'Unauthorized: Missing token' });
+    if (!user?.uid) {
+      res.status(401).json({ message: 'Unauthorized: Missing user info' });
       return;
     }
 
-    const idToken = authHeader.split(' ')[1];
-
-    const decodedToken = await admin.auth().verifyIdToken(idToken);
-
-    if (!decodedToken) {
-      res.status(401).json({ message: 'Unauthorized: Invalid token' });
-      return;
-    }
-
-    const uid = decodedToken.uid;
-    const role = decodedToken.role || null;
-
-    const userDoc = await admin.firestore().collection('users').doc(uid).get();
+    const userDoc = await admin.firestore().collection('users').doc(user.uid).get();
 
     if (!userDoc.exists) {
       res.status(404).json({ message: 'User data not found' });
@@ -271,10 +258,10 @@ const me = async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({
       user: {
-        uid,
-        email: userData?.email || null,
+        uid: user.uid,
+        email: user.email || null,
         name: userData?.name || null,
-        role,
+        role: user.role,
       },
     });
   } catch (error: unknown) {

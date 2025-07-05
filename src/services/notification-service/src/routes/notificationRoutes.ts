@@ -16,6 +16,9 @@ router.post('/', authorizeAdmin, notificationController.createNotification)
 // Dapatkan semua notifikasi admin (hanya admin)
 router.get('/', authorizeAdmin, notificationController.getAllNotifications)
 
+// Dapatkan notifikasi untuk user yang sedang login
+router.get('/me', notificationController.getMyNotifications)
+
 // Dapatkan notifikasi untuk user tertentu (user harus lihat notif sendiri, admin bisa juga lihat semua)
 router.get('/user/:userId', notificationController.getNotificationsByUser)
 

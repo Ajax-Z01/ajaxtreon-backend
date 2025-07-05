@@ -9,6 +9,8 @@ import paymentModel from '../../../payment-service/src/models/paymentModel';
 import * as paymentService from '../../../payment-service/src/services/paymentService';
 import { PaymentData, CreateTransactionPayload, MidtransTransactionResponse } from '../types/payment';
 
+import { sendSystemNotification } from '@shared/utils/sendSystemNotification';
+
 const db = admin.firestore();
 const Timestamp = admin.firestore.Timestamp;
 
@@ -73,7 +75,6 @@ const addOrderWithTransaction = async (
   } if (!payload.customerId) {
     throw new Error('E_CUSTOMER_ID_MISSING: customerId is required');
   }
-
 
   const orderItems = mapItemDetailsToOrderItem(payload.items);
 
@@ -167,6 +168,13 @@ const addOrderWithTransaction = async (
   const paymentId = await paymentModel.createPayment(paymentData);
 
   await orderRef.update({ paymentId });
+  
+  await sendSystemNotification(
+    payload.customerId,
+    'Pesanan berhasil dibuat',
+    `Pesanan #${orderRef.id} telah berhasil dibuat.`,
+    'success'
+  );
 
   return {
     orderId: orderRef.id,
@@ -188,6 +196,13 @@ const updateOrder = async (id: string, status: string): Promise<void> => {
     status: status as OrderStatus,
     updatedAt: Timestamp.now(),
   });
+  
+  await sendSystemNotification(
+    orderDoc.data()?.customerId || null,
+    'Status pesanan diperbarui',
+    `Status pesanan #${id} telah diubah menjadi "${status}".`,
+    'info'
+  );
 };
 
 const deleteOrder = async (id: string): Promise<void> => {
