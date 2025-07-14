@@ -3,6 +3,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 class PaymentDTO {
   orderId: string;
+  userId: string;
   amount: number;
   method: string | null;
   status: PaymentStatus;
@@ -20,6 +21,7 @@ class PaymentDTO {
 
   constructor(data: PaymentData) {
     this.orderId = data.orderId;
+    this.userId = data.userId;
     this.amount = data.amount;
     this.method = data.method ?? null;
     this.status = data.status ?? 'pending';
@@ -41,6 +43,10 @@ class PaymentDTO {
 
     if (!data.orderId || typeof data.orderId !== 'string') {
       errors.push('Invalid or missing orderId');
+    }
+
+    if (!data.userId || typeof data.userId !== 'string') {
+      errors.push('Invalid or missing userId');
     }
 
     if (typeof data.amount !== 'number' || data.amount <= 0) {
@@ -83,6 +89,7 @@ class PaymentDTO {
   static transformToFirestore(dto: PaymentDTO): Omit<PaymentData, 'id'> {
     return {
       orderId: dto.orderId,
+      userId: dto.userId,
       amount: dto.amount,
       method: dto.method,
       status: dto.status,
@@ -107,6 +114,7 @@ class PaymentDTO {
     return {
       id,
       orderId: data.orderId,
+      userId: data.userId,
       amount: data.amount,
       method: data.method ?? null,
       status: data.status,

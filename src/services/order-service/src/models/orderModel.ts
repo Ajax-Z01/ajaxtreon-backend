@@ -151,6 +151,7 @@ const addOrderWithTransaction = async (
 
   const paymentData: Omit<PaymentData, 'id'> = {
     orderId: orderRef.id,
+    userId: payload.customerId,
     amount: total,
     method: payload.paymentMethod ?? null,
     status: 'pending',
@@ -169,10 +170,29 @@ const addOrderWithTransaction = async (
 
   await orderRef.update({ paymentId });
   
+  const customerSnap = await db.collection('customers').doc(payload.customerId).get();
+
+  if (!customerSnap.exists) {
+    throw new Error(`E_CUSTOMER_NOT_FOUND: Customer ${payload.customerId} not found`);
+  }
+
+  const customerData = customerSnap.data();
+  const firebaseUid = customerData?.firebaseUid;
+
+  if (!firebaseUid) {
+    throw new Error(`E_CUSTOMER_MISSING_FIREBASE_UID: Customer ${payload.customerId} does not have firebaseUid`);
+  }
+
+  const productNames = payload.items.map(item => item.name);
+  let productSummary = productNames.slice(0, 2).join(', ');
+  if (productNames.length > 2) {
+    productSummary += ` dan ${productNames.length - 2} lainnya`;
+  }
+
   await sendSystemNotification(
-    payload.customerId,
+    firebaseUid,
     'Pesanan berhasil dibuat',
-    `Pesanan #${orderRef.id} telah berhasil dibuat.`,
+    `Kamu memesan ${productSummary} — pesanan #${orderRef.id} telah berhasil dibuat.`,
     'success'
   );
 

@@ -3,6 +3,7 @@ export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'cancel
 export interface PaymentData {
   id?: string;
   orderId: string;
+  userId: string;
   amount: number;
   method: string | null;
   status: PaymentStatus;

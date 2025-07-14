@@ -1,6 +1,7 @@
 import admin from 'firebase-admin';
 import { PaymentData, PaymentStatus } from '../types/payment';
 import PaymentDTO from '../dtos/paymentDTO';
+import { sendSystemNotification } from '@shared/utils/sendSystemNotification';
 
 const db = admin.firestore();
 
@@ -51,10 +52,41 @@ const updatePaymentStatus = async (
     throw new Error('Invalid status value');
   }
 
-  await db.collection('payments').doc(paymentId).update({
+  const paymentDocRef = db.collection('payments').doc(paymentId);
+  const paymentSnap = await paymentDocRef.get();
+
+  if (!paymentSnap.exists) {
+    throw new Error('Payment not found');
+  }
+
+  const paymentData = paymentSnap.data() as PaymentData;
+
+  await paymentDocRef.update({
     status,
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
+
+  const title = 'Status Pembayaran Diperbarui';
+  let message = '';
+
+  switch (status) {
+    case 'paid':
+      message = `Pembayaran sebesar Rp${paymentData.amount} telah berhasil.`;
+      break;
+    case 'failed':
+      message = `Pembayaran sebesar Rp${paymentData.amount} gagal. Silakan coba lagi.`;
+      break;
+    case 'cancelled':
+      message = `Pembayaran sebesar Rp${paymentData.amount} telah dibatalkan.`;
+      break;
+    case 'pending':
+      message = `Menunggu penyelesaian pembayaran sebesar Rp${paymentData.amount}.`;
+      break;
+    default:
+      message = `Status pembayaran berubah menjadi ${status}.`;
+  }
+
+  await sendSystemNotification(paymentData.userId || null, title, message, 'info');
 
   return { message: 'Payment status updated' };
 };
