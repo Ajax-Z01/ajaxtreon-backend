@@ -53,6 +53,7 @@ export interface OrderRequestBody {
 export interface OrderPayload {
   items: ItemDetails[];
   customerId: string;
+  userId: string;
   createdBy: string;
   customer: MidtransCustomerDetails;
   paymentMethod?: string;

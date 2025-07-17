@@ -1,97 +1,144 @@
 import { Seller } from '../types/seller';
+import { Timestamp } from 'firebase-admin/firestore';
 
 class SellerDTO {
+  // semua properti sama seperti sebelumnya ...
   id: string;
   name: string;
   email?: string;
   phone?: string;
   address?: string;
+  firebaseUid: string;
+
+  // Store Info
   storeName?: string;
   storeUrl?: string;
-  taxId?: string;
-  productCategories?: string[];
-  isVerified?: boolean;
-  firebaseUid: string;
-  createdAt: Date | null;
-  updatedAt: Date | null;
+  slug?: string;
+  storeDescription?: string;
+  storeLogoUrl?: string;
+  storeBannerUrl?: string;
+  storeAnnouncement?: string;
 
-  constructor(
-    id: string,
-    name: string,
-    firebaseUid: string,
-    createdAt: Date | null,
-    updatedAt: Date | null,
-    email?: string,
-    phone?: string,
-    address?: string,
-    storeName?: string,
-    storeUrl?: string,
-    taxId?: string,
-    productCategories?: string[],
-    isVerified?: boolean
-  ) {
-    this.id = id;
-    this.name = name;
-    this.firebaseUid = firebaseUid;
-    this.email = email;
-    this.phone = phone;
-    this.address = address;
-    this.storeName = storeName;
-    this.storeUrl = storeUrl;
-    this.taxId = taxId;
-    this.productCategories = productCategories;
-    this.isVerified = isVerified;
-    this.createdAt = createdAt;
-    this.updatedAt = updatedAt;
+  // Rating & Category
+  ratingAverage?: number;
+  ratingCount?: number;
+  productCategories?: string[];
+
+  // Identity
+  taxId?: string;
+  isVerified?: boolean;
+  status?: 'active' | 'pending' | 'suspended' | 'rejected';
+
+  // Contact
+  website?: string;
+  socialMediaLinks?: {
+    facebook?: string;
+    instagram?: string;
+    twitter?: string;
+    linkedin?: string;
+  };
+
+  // Location
+  location?: {
+    province?: string;
+    city?: string;
+    district?: string;
+    postalCode?: string;
+  };
+
+  // Optional Policies
+  returnPolicy?: string;
+  shippingPolicy?: string;
+  paymentMethods?: string[];
+
+  createdAt: Timestamp | null;
+  updatedAt: Timestamp | null;
+
+  constructor(data: Partial<Seller> & { id: string }) {
+    this.id = data.id;
+    this.name = data.name ?? '';
+    this.email = data.email;
+    this.phone = data.phone;
+    this.address = data.address;
+    this.firebaseUid = data.firebaseUid ?? '';
+
+    this.storeName = data.storeName;
+    this.storeUrl = data.storeUrl;
+    this.slug = data.slug;
+    this.storeDescription = data.storeDescription;
+    this.storeLogoUrl = data.storeLogoUrl;
+    this.storeBannerUrl = data.storeBannerUrl;
+    this.storeAnnouncement = data.storeAnnouncement;
+
+    this.ratingAverage = data.ratingAverage;
+    this.ratingCount = data.ratingCount;
+    this.productCategories = data.productCategories;
+
+    this.taxId = data.taxId;
+    this.isVerified = data.isVerified;
+    this.status = data.status;
+
+    this.website = data.website;
+    this.socialMediaLinks = data.socialMediaLinks;
+
+    this.location = data.location;
+
+    this.returnPolicy = data.returnPolicy;
+    this.shippingPolicy = data.shippingPolicy;
+    this.paymentMethods = data.paymentMethods;
+
+    this.createdAt = data.createdAt ?? null;
+    this.updatedAt = data.updatedAt ?? null;
+  }
+
+  static fromRawInput(input: Omit<Seller, 'id' | 'createdAt' | 'updatedAt'>): SellerDTO {
+    return new SellerDTO({
+      id: '',
+      ...input,
+      createdAt: Timestamp.now(),
+      updatedAt: undefined,
+    });
   }
 
   static fromFirestore(id: string, data: Partial<Seller>): SellerDTO {
-    const createdAt =
-      data.createdAt instanceof Date
-        ? data.createdAt
-        : data.createdAt && typeof data.createdAt.toDate === 'function'
-          ? data.createdAt.toDate()
-          : null;
-
-    const updatedAt =
-      data.updatedAt instanceof Date
-        ? data.updatedAt
-        : data.updatedAt && typeof data.updatedAt.toDate === 'function'
-          ? data.updatedAt.toDate()
-          : null;
-
-    return new SellerDTO(
-      id,
-      data.name ?? '',
-      data.firebaseUid ?? '',
-      createdAt,
-      updatedAt,
-      data.email,
-      data.phone,
-      data.address,
-      data.storeName,
-      data.storeUrl,
-      data.taxId,
-      data.productCategories,
-      data.isVerified
-    );
+    return new SellerDTO({ ...data, id });
   }
 
-  toJSON() {
+  toFirestore(): object {
     return {
-      id: this.id,
       name: this.name,
       email: this.email,
       phone: this.phone,
       address: this.address,
+      firebaseUid: this.firebaseUid,
+
       storeName: this.storeName,
       storeUrl: this.storeUrl,
-      taxId: this.taxId,
+      slug: this.slug,
+      storeDescription: this.storeDescription,
+      storeLogoUrl: this.storeLogoUrl,
+      storeBannerUrl: this.storeBannerUrl,
+      storeAnnouncement: this.storeAnnouncement,
+
+      ratingAverage: this.ratingAverage,
+      ratingCount: this.ratingCount,
       productCategories: this.productCategories,
+
+      taxId: this.taxId,
       isVerified: this.isVerified,
-      firebaseUid: this.firebaseUid,
-      createdAt: this.createdAt ? this.createdAt.toISOString() : null,
-      updatedAt: this.updatedAt ? this.updatedAt.toISOString() : null,
+      status: this.status,
+
+      website: this.website,
+      socialMediaLinks: this.socialMediaLinks,
+
+      location: this.location,
+
+      returnPolicy: this.returnPolicy,
+      shippingPolicy: this.shippingPolicy,
+      paymentMethods: this.paymentMethods,
+
+      createdAt: this.createdAt ?? Timestamp.now(),
+      updatedAt: this.updatedAt ?? null,
     };
   }
 }

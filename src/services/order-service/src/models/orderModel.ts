@@ -74,6 +74,8 @@ const addOrderWithTransaction = async (
       throw new Error('E_NO_ITEMS: Items must be a non-empty array');
   } if (!payload.customerId) {
     throw new Error('E_CUSTOMER_ID_MISSING: customerId is required');
+  } if (!payload.userId) {
+    throw new Error('E_USER_ID_MISSING: userId is required');
   }
 
   const orderItems = mapItemDetailsToOrderItem(payload.items);
@@ -151,7 +153,7 @@ const addOrderWithTransaction = async (
 
   const paymentData: Omit<PaymentData, 'id'> = {
     orderId: orderRef.id,
-    userId: payload.customerId,
+    userId: payload.userId,
     amount: total,
     method: payload.paymentMethod ?? null,
     status: 'pending',

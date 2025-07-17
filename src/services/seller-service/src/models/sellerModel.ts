@@ -9,26 +9,11 @@ const collection = db.collection('sellers');
 const createSeller = async (
   sellerData: Omit<Seller, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<string> => {
-  const now = new Date();
-  const dto = new SellerDTO(
-    '',
-    sellerData.name,
-    sellerData.firebaseUid,
-    now,
-    now,
-    sellerData.email,
-    sellerData.phone,
-    sellerData.address,
-    sellerData.storeName,
-    sellerData.storeUrl,
-    sellerData.taxId,
-    sellerData.productCategories,
-    sellerData.isVerified
-  );
+  const dto = SellerDTO.fromRawInput(sellerData);
 
   const docRef = collection.doc();
   await docRef.set({
-    ...dto,
+    ...dto.toFirestore(),
     createdAt: admin.firestore.FieldValue.serverTimestamp(),
     updatedAt: null,
   });
@@ -36,28 +21,25 @@ const createSeller = async (
   return docRef.id;
 };
 
-// READ
+// READ ALL
 const getAllSellers = async (): Promise<SellerDTO[]> => {
   const snapshot = await collection.get();
   return snapshot.docs.map(doc => SellerDTO.fromFirestore(doc.id, doc.data() as Seller));
 };
 
+// READ BY ID
 const getSellerById = async (id: string): Promise<SellerDTO> => {
   const doc = await collection.doc(id).get();
   if (!doc.exists) throw new Error('Seller not found');
-  const data = doc.data();
-  if (!data) throw new Error('Seller data is undefined');
-  return SellerDTO.fromFirestore(doc.id, data as Seller);
+  return SellerDTO.fromFirestore(doc.id, doc.data() as Seller);
 };
 
+// READ BY FIREBASE UID
 const getSellerByFirebaseUid = async (
   firebaseUid: string
 ): Promise<{ id: string; name: string }> => {
   const snapshot = await collection.where('firebaseUid', '==', firebaseUid).limit(1).get();
-  
-  if (snapshot.empty) {
-    throw new Error('Seller with this Firebase UID not found');
-  }
+  if (snapshot.empty) throw new Error('Seller with this Firebase UID not found');
 
   const doc = snapshot.docs[0];
   const data = doc.data() as Seller;
@@ -77,6 +59,7 @@ const updateSeller = async (
     ...data,
     updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
+
   return { message: 'Seller updated successfully' };
 };
 

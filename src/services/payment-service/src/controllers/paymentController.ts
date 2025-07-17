@@ -15,7 +15,7 @@ const getPayments = async (_req: Request, res: Response): Promise<void> => {
 
 const addPayment = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { orderId, amount, method, customer, items } = req.body;
+    const { orderId, amount, method, customer, items, userId } = req.body;
 
     const payload: CreateTransactionPayload = {
       transaction_details: {
@@ -30,6 +30,7 @@ const addPayment = async (req: Request, res: Response): Promise<void> => {
 
     const paymentData: Omit<PaymentData, 'id'> = {
       orderId,
+      userId,
       amount,
       method,
       status: 'pending',
