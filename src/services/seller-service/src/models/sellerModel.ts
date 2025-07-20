@@ -37,17 +37,14 @@ const getSellerById = async (id: string): Promise<SellerDTO> => {
 // READ BY FIREBASE UID
 const getSellerByFirebaseUid = async (
   firebaseUid: string
-): Promise<{ id: string; name: string }> => {
+): Promise<SellerDTO> => {
   const snapshot = await collection.where('firebaseUid', '==', firebaseUid).limit(1).get();
   if (snapshot.empty) throw new Error('Seller with this Firebase UID not found');
 
   const doc = snapshot.docs[0];
   const data = doc.data() as Seller;
 
-  return {
-    id: doc.id,
-    name: data.name,
-  };
+  return SellerDTO.fromFirestore(doc.id, data);
 };
 
 // UPDATE

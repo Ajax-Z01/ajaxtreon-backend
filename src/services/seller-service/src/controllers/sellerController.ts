@@ -41,6 +41,22 @@ const getSellerByFirebaseUid = async (req: Request, res: Response) => {
   }
 };
 
+const getMe = async (req: Request, res: Response) => {
+  try {
+    const user = res.locals.user;
+
+    if (!user?.uid) {
+      res.status(401).json({ message: 'Unauthorized: Missing user info' });
+      return;
+    }
+
+    const seller = await sellerModel.getSellerByFirebaseUid(user?.uid);
+    res.status(200).json(seller);
+  } catch (error) {
+    res.status(404).json({ message: (error as Error).message });
+  }
+};
+
 const updateSeller = async (req: Request, res: Response) => {
   try {
     const id = req.params.id;
@@ -67,6 +83,7 @@ export default {
   getAllSellers,
   getSellerById,
   getSellerByFirebaseUid,
+  getMe,
   updateSeller,
   deleteSeller,
 };
