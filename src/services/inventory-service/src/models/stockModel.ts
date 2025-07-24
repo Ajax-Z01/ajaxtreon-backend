@@ -1,5 +1,5 @@
 import admin from '@shared/firebaseAdmin';
-import { StockChange, ChangeType } from '../types/stock';
+import { StockChange, ChangeType } from '../types/Stock';
 import StockDTO from '../dtos/stockDTO';
 import { Timestamp } from 'firebase-admin/firestore';
 

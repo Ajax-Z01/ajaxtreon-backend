@@ -1,7 +1,7 @@
 import { toTimestampRange } from './utils';
 import admin from 'firebase-admin';
 import { RevenueReportDTO } from '../dtos/revenueReportDTO';
-import { Order } from '../types/order';
+import { Order } from '../types/Order';
 
 const db = admin.firestore();
 

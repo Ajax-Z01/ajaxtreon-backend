@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import sellerModel from '../models/sellerModel';
-import { Seller } from '../types/seller';
+import { Seller } from '../types/Seller';
 
 const createSeller = async (req: Request, res: Response) => {
   try {

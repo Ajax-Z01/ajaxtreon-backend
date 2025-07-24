@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import { Customer } from '../types/customer';
+import { Customer } from '../types/Customer';
 import { CustomerDTO } from '../dtos/customerDTO';
 
 const db = admin.firestore();

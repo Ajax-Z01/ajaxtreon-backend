@@ -1,5 +1,5 @@
 import notificationModel from 'services/notification-service/src/models/notificationModel'
-import { NotificationType } from 'services/notification-service/src/types/notification'
+import { NotificationType } from 'services/notification-service/src/types/Notification'
 
 /**
  * Sends a system notification to a user.

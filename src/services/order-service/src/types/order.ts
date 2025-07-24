@@ -1,5 +1,5 @@
 import { Timestamp } from 'firebase-admin/firestore';
-import { ItemDetails, MidtransCustomerDetails } from './payment';
+import { ItemDetails, MidtransCustomerDetails } from './Payment';
 
 export enum OrderStatus {
   Pending = 'pending',

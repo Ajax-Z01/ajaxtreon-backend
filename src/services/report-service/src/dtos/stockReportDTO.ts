@@ -1,4 +1,4 @@
-import { Stock } from '../types/stock';
+import { Stock } from '../types/Stock';
 
 class StockReportDTO {
   productId: string;

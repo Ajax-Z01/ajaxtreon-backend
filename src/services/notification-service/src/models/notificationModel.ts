@@ -1,6 +1,6 @@
 import admin from '@shared/firebaseAdmin'
 import NotificationDTO from '../dtos/notificationDTO'
-import type { Notification, CreateNotificationPayload } from '../types/notification'
+import type { Notification, CreateNotificationPayload } from '../types/Notification'
 
 const db = admin.firestore()
 const Timestamp = admin.firestore.Timestamp

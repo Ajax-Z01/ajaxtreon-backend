@@ -1,5 +1,5 @@
-import { OrderItem } from '../types/order';
-import { ItemDetails } from '../types/payment';
+import { OrderItem } from '../types/Order';
+import { ItemDetails } from '../types/Payment';
 
 export function mapItemDetailsToOrderItem(items: ItemDetails[]): OrderItem[] {
   return items.map(item => ({

@@ -1,7 +1,7 @@
 import { toTimestampRange, queryByDateRange, dbInstance } from './utils';
 import { InventoryTurnoverDTO } from '../dtos/inventoryTurnoverDTO';
-import { Order } from '../types/order';
-import { StockChange } from '../types/stock';
+import { Order } from '../types/Order';
+import { StockChange } from '../types/Stock';
 
 const db = dbInstance;
 

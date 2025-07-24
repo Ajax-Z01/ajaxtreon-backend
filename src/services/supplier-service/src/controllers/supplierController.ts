@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import supplierModel from '../models/supplierModel';
-import { Supplier } from '../types/supplier';
+import { Supplier } from '../types/Supplier';
 
 const createSupplier = async (req: Request, res: Response) => {
   try {

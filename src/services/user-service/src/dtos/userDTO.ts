@@ -1,4 +1,4 @@
-import { UserData, UserRole } from '../types/user';
+import { UserData, UserRole } from '../types/User';
 
 class UserDTO {
   id: string;

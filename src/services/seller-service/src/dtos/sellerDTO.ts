@@ -1,4 +1,4 @@
-import { Seller } from '../types/seller';
+import { Seller } from '../types/Seller';
 import { Timestamp } from 'firebase-admin/firestore';
 
 class SellerDTO {

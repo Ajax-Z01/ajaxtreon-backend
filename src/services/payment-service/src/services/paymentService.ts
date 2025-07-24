@@ -1,5 +1,5 @@
 import midtransClient from '../libs/midtransClient';
-import type { CreateTransactionPayload } from '../types/payment';
+import type { CreateTransactionPayload } from '../types/Payment';
 
 export async function createTransaction(payload: CreateTransactionPayload) {
   try {

@@ -1,6 +1,6 @@
 import { queryByDateRange, toTimestampRange } from './utils';
 import { PurchaseReportDTO } from '../dtos/purchaseReportDTO';
-import { Purchase } from '../types/purchase';
+import { Purchase } from '../types/Purchase';
 
 export const getPurchaseData = async (startDate: string, endDate: string): Promise<PurchaseReportDTO[]> => {
   const { startTimestamp, endTimestamp } = toTimestampRange(startDate, endDate);

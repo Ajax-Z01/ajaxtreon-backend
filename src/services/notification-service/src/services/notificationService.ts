@@ -1,5 +1,5 @@
 import notificationModel from '../models/notificationModel'
-import type { CreateNotificationPayload, Notification } from '../types/notification'
+import type { CreateNotificationPayload, Notification } from '../types/Notification'
 import NotificationDTO from '../dtos/notificationDTO'
 
 const create = async (payload: CreateNotificationPayload): Promise<string> => {

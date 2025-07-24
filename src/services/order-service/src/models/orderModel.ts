@@ -1,13 +1,13 @@
 import admin from '@shared/firebaseAdmin';
 import OrderDTO from '../dtos/orderDTO';
-import { Order, OrderStatus, OrderPayload, OrderResponse } from '../types/order';
-import { StockChange } from '../types/stock';
+import { Order, OrderStatus, OrderPayload, OrderResponse } from '../types/Order';
+import { StockChange } from '../types/Stock';
 import { calculateOrderSummary } from '../utils/order';
 import { mapItemDetailsToOrderItem, buildPaymentItems } from '../utils/itemMappers';
 
 import paymentModel from '../../../payment-service/src/models/paymentModel';
 import * as paymentService from '../../../payment-service/src/services/paymentService';
-import { PaymentData, CreateTransactionPayload, MidtransTransactionResponse } from '../types/payment';
+import { PaymentData, CreateTransactionPayload, MidtransTransactionResponse } from '../types/Payment';
 
 import { sendSystemNotification } from '@shared/utils/sendSystemNotification';
 

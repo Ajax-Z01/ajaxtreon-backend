@@ -1,4 +1,4 @@
-import { Order } from '../types/order';
+import { Order } from '../types/Order';
 
 export class SalesReportDTO {
   orderId: string;

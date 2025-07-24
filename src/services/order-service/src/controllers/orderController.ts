@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import orderModel from '../models/orderModel';
-import { OrderPayload } from '../types/order';
+import { OrderPayload } from '../types/Order';
 
 const getOrders = async (req: Request, res: Response): Promise<void> => {
   try {

@@ -1,5 +1,5 @@
 import { Timestamp } from 'firebase-admin/firestore';
-import { StockChange, ChangeType } from '../types/stock';
+import { StockChange, ChangeType } from '../types/Stock';
 
 class StockHistoryDTO {
   productId: string;

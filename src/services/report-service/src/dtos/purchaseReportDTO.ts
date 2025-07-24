@@ -1,5 +1,5 @@
 import { Timestamp } from 'firebase-admin/firestore';
-import { Purchase, PurchaseStatus } from '../types/purchase';
+import { Purchase, PurchaseStatus } from '../types/Purchase';
 
 class PurchaseReportDTO {
   supplierId: string;

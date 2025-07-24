@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import { PurchaseData, PurchaseStatus } from '../types/purchase';
+import { PurchaseData, PurchaseStatus } from '../types/Purchase';
 import PurchaseDTO from '../dtos/purchaseDTO';
 
 const db = admin.firestore();

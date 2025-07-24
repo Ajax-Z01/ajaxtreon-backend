@@ -1,4 +1,4 @@
-import type { ChangeType } from '../types/stock';
+import type { ChangeType } from '../types/Stock';
 
 export class StockChangeDTO {
   productId: string;

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import paymentModel from '../models/paymentModel';
-import { PaymentData, PaymentStatus, CreateTransactionPayload } from '../types/payment';
+import { PaymentData, PaymentStatus, CreateTransactionPayload } from '../types/Payment';
 import * as paymentService from '../services/paymentService';
 
 const getPayments = async (_req: Request, res: Response): Promise<void> => {

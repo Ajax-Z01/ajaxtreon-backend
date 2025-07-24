@@ -1,4 +1,4 @@
-import { Customer, ContactPerson } from '../types/customer';
+import { Customer, ContactPerson } from '../types/Customer';
 
 class CustomerDTO {
   id: string;

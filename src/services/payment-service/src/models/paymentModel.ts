@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import { PaymentData, PaymentStatus } from '../types/payment';
+import { PaymentData, PaymentStatus } from '../types/Payment';
 import PaymentDTO from '../dtos/paymentDTO';
 import { sendSystemNotification } from '@shared/utils/sendSystemNotification';
 

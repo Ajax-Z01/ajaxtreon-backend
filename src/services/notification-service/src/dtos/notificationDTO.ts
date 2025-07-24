@@ -1,5 +1,5 @@
 import { Timestamp, DocumentSnapshot } from 'firebase-admin/firestore'
-import type { Notification, NotificationType, CreateNotificationPayload } from '../types/notification'
+import type { Notification, NotificationType, CreateNotificationPayload } from '../types/Notification'
 
 class NotificationDTO {
   id?: string

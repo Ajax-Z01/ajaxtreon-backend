@@ -1,5 +1,5 @@
 import { Timestamp, DocumentSnapshot } from 'firebase-admin/firestore';
-import { Order, OrderItem, OrderStatus } from '../types/order';
+import { Order, OrderItem, OrderStatus } from '../types/Order';
 
 class OrderDTO {
   id?: string;

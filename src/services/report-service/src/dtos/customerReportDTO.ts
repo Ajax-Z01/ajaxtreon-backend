@@ -1,5 +1,5 @@
-import { Customer } from '../types/customer';
-import { Order } from '../types/order';
+import { Customer } from '../types/Customer';
+import { Order } from '../types/Order';
 
 class CustomerReportDTO {
   customerId: string;

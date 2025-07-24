@@ -1,4 +1,4 @@
-import { OrderItem, OrderCalculationOptions } from '../types/order';
+import { OrderItem, OrderCalculationOptions } from '../types/Order';
 
 export function calculateOrderSummary(
   items: OrderItem[],

@@ -1,5 +1,5 @@
 import { dbInstance, toTimestampRange } from './utils';
-import { StockChange } from '../types/stock';
+import { StockChange } from '../types/Stock';
 import { StockHistoryDTO } from '../dtos/stockHistoryDTO';
 
 const db = dbInstance;

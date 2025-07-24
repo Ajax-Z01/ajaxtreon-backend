@@ -1,6 +1,6 @@
 import admin from '@shared/firebaseAdmin';
 import ProductDTO from '../dtos/productDTO';
-import type { Product } from '../types/product';
+import type { Product } from '../types/Product';
 
 const firestore = admin.firestore;
 const db = firestore();

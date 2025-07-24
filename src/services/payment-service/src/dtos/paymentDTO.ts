@@ -1,4 +1,4 @@
-import { PaymentData, PaymentStatus } from '../types/payment';
+import { PaymentData, PaymentStatus } from '../types/Payment';
 import { Timestamp } from 'firebase-admin/firestore';
 
 class PaymentDTO {

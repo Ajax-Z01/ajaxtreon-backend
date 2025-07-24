@@ -1,6 +1,6 @@
 import admin from '@shared/firebaseAdmin';
 import CategoryDTO from '../dtos/categoryDTO';
-import { Category } from '../types/category';
+import { Category } from '../types/Category';
 
 const firestore = admin.firestore;
 const db = firestore();

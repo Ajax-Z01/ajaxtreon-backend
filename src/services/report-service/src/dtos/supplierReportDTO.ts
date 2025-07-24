@@ -1,6 +1,6 @@
 import { Timestamp } from 'firebase-admin/firestore';
-import type { Supplier } from '../types/supplier';
-import type { Purchase } from '../types/purchase';
+import type { Supplier } from '../types/Supplier';
+import type { Purchase } from '../types/Purchase';
 
 class SupplierReportDTO {
   supplierId: string;

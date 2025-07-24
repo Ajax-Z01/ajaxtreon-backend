@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase-admin/firestore';
+
 export type UserRole = 'admin' | 'user' | 'staff' | 'manager' | 'customer' | 'supplier' | 'seller';
 
 export interface UserData {
@@ -9,9 +11,9 @@ export interface UserData {
   role: UserRole;
   isActive: boolean;
   profilePictureUrl?: string;
-  createdAt: FirebaseFirestore.Timestamp;
-  updatedAt?: FirebaseFirestore.Timestamp;
-  lastLoginAt?: FirebaseFirestore.Timestamp;
+  createdAt: Timestamp;
+  updatedAt?: Timestamp;
+  lastLoginAt?: Timestamp;
 }
 
 export interface UpdateUserData {
@@ -22,5 +24,5 @@ export interface UpdateUserData {
   role?: UserRole;
   isActive?: boolean;
   profilePictureUrl?: string;
-  updatedAt?: FirebaseFirestore.Timestamp;
+  updatedAt?: Timestamp;
 }

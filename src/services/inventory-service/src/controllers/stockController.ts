@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import stockModel from '../models/stockModel'
-import { ChangeType } from '../types/stock';
+import { ChangeType } from '../types/Stock';
 
 const addStock = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;

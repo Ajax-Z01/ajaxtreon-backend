@@ -1,6 +1,6 @@
 import admin from '@shared/firebaseAdmin';
 import { UserDTO } from '../dtos/userDTO';
-import { UserData, UpdateUserData, UserRole } from '../types/user';
+import { UserData, UpdateUserData, UserRole } from '../types/User';
 
 // Create user in Firebase Authentication and Firestore
 const createUser = async (
