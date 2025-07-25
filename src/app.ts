@@ -17,6 +17,7 @@ import customerService from 'services/customer-service/src';
 import sellerService from 'services/seller-service/src';
 import notificationService from 'services/notification-service/src';
 import crmService from 'services/crm-service/src';
+import activityService from 'services/activity-service/src';
 
 dotenv.config();
 
@@ -54,6 +55,7 @@ app.use('/customer', customerService);
 app.use('/seller', sellerService);
 app.use('/notification', notificationService);
 app.use('/crm', crmService);
+app.use('/activity', activityService);
 
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err.stack);
